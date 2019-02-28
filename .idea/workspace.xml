@@ -204,23 +204,22 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1551360519321</updated>
-      <workItem from="1551360521569" duration="9159000" />
+      <workItem from="1551360521569" duration="9481000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="9159000" />
+    <option name="totallyTimeSpent" value="9481000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="827" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.5878661" visible="true" weight="0.26752505" />
-      <window_info id="Structure" order="1" sideWeight="0.4121339" side_tool="true" visible="true" weight="0.26752505" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.58752996" visible="true" weight="0.26752505" />
+      <window_info id="Structure" order="1" sideWeight="0.41247" side_tool="true" visible="true" weight="0.26752505" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3286517" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3286517" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -229,7 +228,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="11" weight="0.41432583" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.41432583" />
       <window_info anchor="bottom" id="Python Console" order="12" />
       <window_info anchor="bottom" id="Database Console" order="13" weight="0.3293348" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
