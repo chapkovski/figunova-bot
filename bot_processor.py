@@ -60,7 +60,8 @@ def start(update, context):
 def help(update, context):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
-
+def smth(update, context):
+    print(update.message.text, 'TEST!!!!')
 
 def echo(update, context):
     """Echo the user message."""
@@ -85,7 +86,16 @@ def echo(update, context):
         update.message.reply_text(m_for_self)
     send_message(chat_id, m_for_others)
 
-
+def build_menu(buttons,
+               n_cols,
+               header_buttons=None,
+               footer_buttons=None):
+    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
+    if header_buttons:
+        menu.insert(0, header_buttons)
+    if footer_buttons:
+        menu.append(footer_buttons)
+    return menu
 
 def error(update, context):
     """Log Errors caused by Updates."""
@@ -121,8 +131,8 @@ def main():
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, callback_func))
     # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(Filters.text, echo))
-
+    # dp.add_handler(MessageHandler(Filters.text, echo))
+    dp.add_handler(MessageHandler(Filters.all, smth))
     # log all errors
     dp.add_error_handler(error)
 
