@@ -24,8 +24,14 @@ bot.
 
 import logging
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from telegram import Chat
+import telegram
+from emoji import emojize
+
+from telegram import ReplyKeyboardRemove
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters,StringRegexHandler
+from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
+from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
+import re
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -44,8 +50,9 @@ REQUEST_KWARGS = {
 }
 updater = Updater(TOKEN, request_kwargs=REQUEST_KWARGS, use_context=True)
 dp = updater.dispatcher
+bot = updater.bot
 get_users()
-
+payment_regex = r'(?P<amount>[0-9]+([,.][0-9]*)?) (?P<rest>.+)'
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -60,14 +67,41 @@ def start(update, context):
 def help(update, context):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
+
+
 def smth(update, context):
     print(update.message.text, 'TEST!!!!')
 
+
 def echo(update, context):
+    print('AAAAUUUU', update)
+    group_chat_id = update.effective_message.chat_id
+    sender_id = update.effective_user.id
+    print(f'SENDER ID {sender_id}')
+    print(f'GRUP ID {group_chat_id}')
+    bot.send_message(chat_id=sender_id, text=f'personal message to: {sender_id}')
+    bot.send_message(chat_id=group_chat_id, text=f'universal message to: {group_chat_id}')
+
+    bot.send_message(chat_id=group_chat_id, text=emojize("yummy :cake:", use_aliases=True))
+    custom_keyboard = [[emojize(":tongue:", use_aliases=True),emojize(":boy:", use_aliases=True)], ]
+    reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
+
+    bot.send_message(chat_id=group_chat_id,
+                     text="Custom Keyboard Test",
+                     reply_markup=reply_markup)
+
+    # Remove a custom keyboard
+    # reply_markup = telegram.ReplyKeyboardRemove()
+    # >> > bot.send_message(chat_id=chat_id, text="I'm back.", reply_markup=reply_markup)
     """Echo the user message."""
     raw_text = update.message.text
+    print(f'RECEIVED MESSAGE::: {raw_text}')
+    # if raw_text=='top-left':
+    #     reply_markup = telegram.ReplyKeyboardRemove()
+    #     bot.send_message(chat_id=chat_id, text="I'm back.", reply_markup=reply_markup)
+    return
     splitting_val = raw_text.split()[0]
-    chat_id = update.effective_message.chat_id
+
     try:
         val = float(splitting_val)
     except ValueError:
@@ -86,6 +120,7 @@ def echo(update, context):
         update.message.reply_text(m_for_self)
     send_message(chat_id, m_for_others)
 
+
 def build_menu(buttons,
                n_cols,
                header_buttons=None,
@@ -97,6 +132,7 @@ def build_menu(buttons,
         menu.append(footer_buttons)
     return menu
 
+
 def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
@@ -107,15 +143,18 @@ def send_message(chat_id, text):
     users = [p for p in get_users() if p != str(chat_id)]
     if users:
         for u in users:
-            updater.bot.sendMessage(chat_id=u, text=text, )
+            bot.sendMessage(chat_id=u, text=text, )
 
 
-def callback_func(bot, update):
+def new_members(bot, update):
     # here you receive a list of new members (User Objects) in a single service message
     new_members = update.message.new_chat_members
     # do your stuff here:
     for member in new_members:
         print(member.username)
+def process_payment( update,context):
+    print('RRRR',context.matches[0].group('amount'))
+    print('AAAAA', context.matches[0].group('rest'))
 
 
 def main():
@@ -129,10 +168,15 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, callback_func))
+    # we try to grasp all messages starting with digits here to process them as new records
+    dp.add_handler(MessageHandler(Filters.regex(payment_regex), process_payment))
+
+    # TODO: when new chat members are added - register them in the db
+
+    dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, new_members))
     # on noncommand i.e message - echo the message on Telegram
-    # dp.add_handler(MessageHandler(Filters.text, echo))
-    dp.add_handler(MessageHandler(Filters.all, smth))
+    dp.add_handler(MessageHandler(Filters.text, echo))
+    # dp.add_handler(MessageHandler(Filters.all, smth))
     # log all errors
     dp.add_error_handler(error)
 
