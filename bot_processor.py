@@ -26,20 +26,18 @@ import logging
 
 import telegram
 from emoji import emojize
-
-from telegram import ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, StringRegexHandler
 from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
-import re
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+# todo: move to env. vars
 TOKEN = '690401493:AAHuK1MUdQLCwMiSuhkZbXfoJ2YDvl6tgrc'
-
+# todo: get rid
 REQUEST_KWARGS = {
     'proxy_url': 'socks5://phobos.public.opennetwork.cc:1090',
     # Optional, if you need authentication:
@@ -48,15 +46,15 @@ REQUEST_KWARGS = {
         'password': 'LHNHr5FX',
     }
 }
+"""Start the bot."""
+
 updater = Updater(TOKEN, request_kwargs=REQUEST_KWARGS, use_context=True)
 dp = updater.dispatcher
 bot = updater.bot
-get_users()
+# this is the regex to catch payments
 payment_regex = r'(?P<amount>[0-9]+([,.][0-9]*)?) (?P<rest>.+)'
 
 
-# Define a few command handlers. These usually take the two arguments bot and
-# update. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
     fname = update.message.chat.first_name
     lname = update.message.chat.last_name
@@ -65,29 +63,39 @@ def start(update, context):
     update.message.reply_text(f'Привет {fname} {lname}! Итак, займемся твоими финансами...')
 
 
+def register_payment(update, context):
+
+    # todo
+    print(update, """KKSKSKSKSKSKS""")
+    raw_amount = context.match.groupdict().get('amount')
+    val = float(raw_amount)
+    rest =  context.match.groupdict().get('rest')
+    fname = update.message.chat.first_name
+    lname = update.message.chat.last_name
+    write_val(date=update.message.date,
+              name=f'{fname} {lname}',
+              val=val,
+              rest=rest)
+
+
 def callback_eval(update, context):
+    print(f'UPDATE:: {update}')
+    print(f'CONTEXT:: {context}')
     query_data = update.callback_query.data
-    print('JGJGJGJGJ', update)
-
     if query_data == "payment_confirmed":
-
-        print('PAYMENT CONFIRMED!!!')
+        pass
+        # register_payment(update, context)
 
     elif query_data == "payment_cancelled":
         print('PAYMENT CANCELLED!!! ')
         bot.delete_message(chat_id=update.callback_query.message.chat_id,
                            message_id=update.callback_query.message.message_id)
-        # bot.editMessageText(chat_id=update.callback_query.message.chat_id, text='Payment cancelled',
-        #     message_id=update.callback_query.message.message_id, reply_markup=None)
 
 
 def help(update, context):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
 
-
-def smth(update, context):
-    print(update.message.text, 'TEST!!!!')
 
 
 def echo(update, context):
@@ -105,47 +113,9 @@ def echo(update, context):
                      text="Custom Keyboard Test",
                      reply_markup=reply_markup)
 
-    # Remove a custom keyboard
-    # reply_markup = telegram.ReplyKeyboardRemove()
-    # >> > bot.send_message(chat_id=chat_id, text="I'm back.", reply_markup=reply_markup)
-    """Echo the user message."""
-    raw_text = update.message.text
-    print(f'RECEIVED MESSAGE::: {raw_text}')
-    # if raw_text=='top-left':
-    #     reply_markup = telegram.ReplyKeyboardRemove()
-    #     bot.send_message(chat_id=chat_id, text="I'm back.", reply_markup=reply_markup)
-    return
-    splitting_val = raw_text.split()[0]
-
-    try:
-        val = float(splitting_val)
-    except ValueError:
-        val = None
-        m_for_self = m_for_others = raw_text
-    if isinstance(val, float):
-        rest = update.message.text[len(splitting_val):]
-        fname = update.message.chat.first_name
-        lname = update.message.chat.last_name
-        write_val(date=update.message.date,
-                  name=f'{fname} {lname}',
-                  val=val,
-                  rest=rest)
-        m_for_others = f'{fname} {lname} внес новую трату: {val}  на: "{rest}"'
-        m_for_self = f'Ваша трата:  {val}  на: "{rest}" успешно зарегистрирована'
-        update.message.reply_text(m_for_self)
-    send_message(chat_id, m_for_others)
 
 
-def build_menu(buttons,
-               n_cols,
-               header_buttons=None,
-               footer_buttons=None):
-    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
-    if header_buttons:
-        menu.insert(0, header_buttons)
-    if footer_buttons:
-        menu.append(footer_buttons)
-    return menu
+
 
 
 def error(update, context):
@@ -160,57 +130,32 @@ def send_message(chat_id, text):
             bot.sendMessage(chat_id=u, text=text, )
 
 
-def new_members(update, context):
-    # here you receive a list of new members (User Objects) in a single service message
-    new_members = update.message.new_chat_members
-    # do your stuff here:
-    for member in new_members:
-        print(member.username)
-
 
 def process_payment(update, context):
-    print('QUERY???? PAPAP???', update.callback_query)
     yes_button = InlineKeyboardButton(text="Yes \U0001F1E9\U0001F1EA", callback_data="payment_confirmed")
     no_button = InlineKeyboardButton(text="No \U0001F1FA\U0001F1F8", callback_data="payment_cancelled")
+    # todo: emoji inline keyboard
+    # custom_keyboard = [[emojize(":tongue:", use_aliases=True), emojize(":boy:", use_aliases=True)], ]
     yes_no_keyboard = InlineKeyboardMarkup([[yes_button, no_button], ])
-    print('8888888', context.match.groupdict().get('amount'))
-    print('2228888888', context.match.groupdict().get('amousssnt'))
-    if update.callback_query:
-        print('UPDATE SENT??!?!?!')
-    else:
-        bot.sendMessage(chat_id=update.message.chat_id, text='Do you confirm the payment?',
-                        reply_markup=yes_no_keyboard, message_id=update.message.message_id)
+    bot.sendMessage(chat_id=update.message.chat_id, text='Do you confirm the payment?',
+                        reply_markup=yes_no_keyboard, message_id=update.message.message_id, matches=context.match)
 
 
 def main():
-    """Start the bot."""
-    # Create the Updater and pass it your bot's token.
-    # Make sure to set use_context=True to use the new context based callbacks
-    # Post version 12 this will no longer be necessary
-
-    # Get the dispatcher to register handlers
-
-    # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help))
-
+    start_handler =  CommandHandler("start", start)
+    help_handler = CommandHandler("help", help)
     # we try to grasp all messages starting with digits here to process them as new records
-    dp.add_handler(MessageHandler(Filters.regex(payment_regex), process_payment))
+    payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment)
     callback_handler = CallbackQueryHandler(callback_eval)
-    dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, new_members))
-    dp.add_handler(callback_handler)
-    # on noncommand i.e message - echo the message on Telegram
-    # dp.add_handler(MessageHandler(Filters.text, echo))
-    # dp.add_handler(MessageHandler(Filters.all, smth))
-    # log all errors
+    handlers = [start_handler,help_handler, payment_handler, callback_handler]
+    for handler in handlers:
+        dp.add_handler(handler)
+
+
     dp.add_error_handler(error)
 
     # Start the Bot
     updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
 
