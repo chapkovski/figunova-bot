@@ -64,12 +64,12 @@ def start(update, context):
 
 
 def register_payment(update, context):
-
+    """Connect to DB and register new payment there."""
     # todo
     print(update, """KKSKSKSKSKSKS""")
     raw_amount = context.match.groupdict().get('amount')
     val = float(raw_amount)
-    rest =  context.match.groupdict().get('rest')
+    rest = context.match.groupdict().get('rest')
     fname = update.message.chat.first_name
     lname = update.message.chat.last_name
     write_val(date=update.message.date,
@@ -78,9 +78,9 @@ def register_payment(update, context):
               rest=rest)
 
 
-def callback_eval(update, context):
+def callback_eval(update, context, user_data):
     print(f'UPDATE:: {update}')
-    print(f'CONTEXT:: {context}')
+    print(f'USER DATA:: {user_data}')
     query_data = update.callback_query.data
     if query_data == "payment_confirmed":
         pass
@@ -97,27 +97,6 @@ def help(update, context):
     update.message.reply_text('Help!')
 
 
-
-def echo(update, context):
-    group_chat_id = update.effective_message.chat_id
-    sender_id = update.effective_user.id
-
-    bot.send_message(chat_id=sender_id, text=f'personal message to: {sender_id}')
-    bot.send_message(chat_id=group_chat_id, text=f'universal message to: {group_chat_id}')
-
-    bot.send_message(chat_id=group_chat_id, text=emojize("yummy :cake:", use_aliases=True))
-    custom_keyboard = [[emojize(":tongue:", use_aliases=True), emojize(":boy:", use_aliases=True)], ]
-    reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
-
-    bot.send_message(chat_id=group_chat_id,
-                     text="Custom Keyboard Test",
-                     reply_markup=reply_markup)
-
-
-
-
-
-
 def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
@@ -130,7 +109,6 @@ def send_message(chat_id, text):
             bot.sendMessage(chat_id=u, text=text, )
 
 
-
 def process_payment(update, context):
     yes_button = InlineKeyboardButton(text="Yes \U0001F1E9\U0001F1EA", callback_data="payment_confirmed")
     no_button = InlineKeyboardButton(text="No \U0001F1FA\U0001F1F8", callback_data="payment_cancelled")
@@ -138,19 +116,18 @@ def process_payment(update, context):
     # custom_keyboard = [[emojize(":tongue:", use_aliases=True), emojize(":boy:", use_aliases=True)], ]
     yes_no_keyboard = InlineKeyboardMarkup([[yes_button, no_button], ])
     bot.sendMessage(chat_id=update.message.chat_id, text='Do you confirm the payment?',
-                        reply_markup=yes_no_keyboard, message_id=update.message.message_id, matches=context.match)
+                    reply_markup=yes_no_keyboard, message_id=update.message.message_id)
 
 
 def main():
-    start_handler =  CommandHandler("start", start)
+    start_handler = CommandHandler("start", start)
     help_handler = CommandHandler("help", help)
     # we try to grasp all messages starting with digits here to process them as new records
-    payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment)
-    callback_handler = CallbackQueryHandler(callback_eval)
-    handlers = [start_handler,help_handler, payment_handler, callback_handler]
+    payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment, pass_user_data=True)
+    callback_handler = CallbackQueryHandler(callback_eval, pass_user_data=True)
+    handlers = [start_handler, help_handler, payment_handler, callback_handler]
     for handler in handlers:
         dp.add_handler(handler)
-
 
     dp.add_error_handler(error)
 
