@@ -68,6 +68,11 @@ help_message = '''
     \n Если  хочешь получить справку по командам (я буду добавлять новые...), то набери <code>/help</code>
     '''
 
+# todo: N largest (5 by default) of current user since a specific date
+def largest(update, context):
+    pass
+
+
 def report(update, context):
     if context.args:
         try:
@@ -121,6 +126,7 @@ def register_payment(update, context):
     gsheet_register_payment(date=date, user_id=user_id, user_name=f'{fname} {lname}', val=val, rest=rest)
 
 
+
 def help(update, context):
     """Send a message when the command /help is issued."""
     update.message.reply_html(help_message)
@@ -145,7 +151,7 @@ def process_payment(update, context):
 def main():
     start_handler = CommandHandler("start", start)
     help_handler = CommandHandler("help", help)
-    report_handler = CommandHandler("report", report)
+    report_handler = CommandHandler("report", report, pass_args=True)
     # we try to grasp all messages starting with digits here to process them as new records
     payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment, pass_user_data=True)
 
