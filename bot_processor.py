@@ -1,13 +1,17 @@
 print('hello!')
 from access_gsheet import write_val, get_users, register_user
 from django.conf import settings
+from utils import cp
 import django
-django.setup()
-from budget.models import Payment
-# settings.configure(default_settings='budget_telebot.settings')
+from dateutil import parser
+from django.db.models.functions import Concat
+from django.db.models import CharField, Value as V
 
-# export
-# DJANGO_SETTINGS_MODULE = "budget_telebot.settings"
+import pytz
+django.setup()
+from budget.models import Payment, Payer
+import datetime
+from django.db.models import Sum, Avg
 
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -18,16 +22,7 @@ from budget.models import Payment
 # https://github.com/python-telegram-bot/python-telegram-bot/tree/v11.1.0/examples
 
 """
-Simple Bot to reply to Telegram messages.
-
-First, a few handler functions are defined. Then, those functions are passed to
-the Dispatcher and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-
-Usage:
-Basic Echobot example, repeats messages.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
+Bot that registers the payments.
 """
 
 import logging
@@ -63,41 +58,54 @@ bot = updater.bot
 payment_regex = r'(?P<amount>[0-9]+([,.][0-9]*)?) (?P<rest>.+)'
 
 
+def report(update, context):
+    if context.args:
+        try:
+            date = parser.parse(context.args[0])
+        except ValueError:
+            update.message.reply_text(f'Не могу распознать дату, попробуйте еще раз...')
+            return
+    else:
+        todayDate = datetime.datetime.now()
+        date = todayDate.replace(day=1)
+    date = date.replace(tzinfo=pytz.UTC)
+    payments = Payment.objects.annotate(
+        screen_name=Concat('creator__first_name', V(' '), 'creator__last_name', output_field=CharField()), ).order_by().filter(
+        timestamp__gte=date).values('screen_name').annotate(total_sum=Sum('amount'), avg_sum=Avg('amount'))
+    if payments.exists():
+        message = f"""
+         <b>Траты начиная с {date.strftime('%d-%m-%y')}:</b> \n    
+         """
+        for p in payments:
+            message += f"""
+            <i>{p['screen_name']}</i>: Всего: <b>{p['total_sum']}</b>. В среднем за день: {p['avg_sum']} \n
+            """
+        update.message.reply_html(text=message)
+    else:
+        update.message.reply_text(f'Нет трат за этот период!')
+
+
+
 def start(update, context):
-    fname = update.message.chat.first_name
-    lname = update.message.chat.last_name
-    register_user(update.effective_message.chat_id, fname, lname)
     """Send a message when the command /start is issued."""
-    update.message.reply_text(f'Привет {fname} {lname}! Итак, займемся твоими финансами...')
+    update.message.reply_text(f'Привет! Итак, займемся твоими финансами...')
 
 
 def register_payment(update, context):
+    user_id = update.message.from_user.id
+    fname = update.message.from_user.first_name
+    lname = update.message.from_user.last_name
+    user_info = {'first_name': fname, 'last_name': lname}
+    user, _ = Payer.objects.get_or_create(telegram_id=user_id, defaults=user_info)
     """Connect to DB and register new payment there."""
-    # todo
-    print(update, """KKSKSKSKSKSKS""")
+    #
     raw_amount = context.match.groupdict().get('amount')
     val = float(raw_amount)
     rest = context.match.groupdict().get('rest')
-    fname = update.message.chat.first_name
-    lname = update.message.chat.last_name
-    write_val(date=update.message.date,
-              name=f'{fname} {lname}',
-              val=val,
-              rest=rest)
-
-
-def callback_eval(update, context, user_data):
-    print(f'UPDATE:: {update}')
-    print(f'USER DATA:: {user_data}')
-    query_data = update.callback_query.data
-    if query_data == "payment_confirmed":
-        pass
-        # register_payment(update, context)
-
-    elif query_data == "payment_cancelled":
-        print('PAYMENT CANCELLED!!! ')
-        bot.delete_message(chat_id=update.callback_query.message.chat_id,
-                           message_id=update.callback_query.message.message_id)
+    Payment.objects.create(amount=val,
+                           description=rest,
+                           creator=user
+                           )
 
 
 def help(update, context):
@@ -118,24 +126,17 @@ def send_message(chat_id, text):
 
 
 def process_payment(update, context):
-
-    yes_button = InlineKeyboardButton(text="Yes \U0001F1E9\U0001F1EA", callback_data="payment_confirmed")
-    no_button = InlineKeyboardButton(text="No \U0001F1FA\U0001F1F8", callback_data="payment_cancelled")
-    # todo: emoji inline keyboard
-    # custom_keyboard = [[emojize(":tongue:", use_aliases=True), emojize(":boy:", use_aliases=True)], ]
-    yes_no_keyboard = InlineKeyboardMarkup([[yes_button, no_button], ])
-    bot.sendMessage(chat_id=update.message.chat_id, text='Do you confirm the payment?',
-                    reply_markup=yes_no_keyboard, message_id=update.message.message_id)
+    register_payment(update, context)
 
 
 def main():
-
     start_handler = CommandHandler("start", start)
     help_handler = CommandHandler("help", help)
+    report_handler = CommandHandler("report", report)
     # we try to grasp all messages starting with digits here to process them as new records
     payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment, pass_user_data=True)
-    callback_handler = CallbackQueryHandler(callback_eval, pass_user_data=True)
-    handlers = [start_handler, help_handler, payment_handler, callback_handler]
+
+    handlers = [start_handler, help_handler, payment_handler, report_handler]
     for handler in handlers:
         dp.add_handler(handler)
 
