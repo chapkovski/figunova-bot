@@ -1,5 +1,5 @@
 print('hello!')
-from access_gsheet import write_val, get_users, register_user
+from access_gsheet import gsheet_register_payment
 from django.conf import settings
 from utils import cp
 import django
@@ -8,6 +8,7 @@ from django.db.models.functions import Concat
 from django.db.models import CharField, Value as V
 
 import pytz
+
 django.setup()
 from budget.models import Payment, Payer
 import datetime
@@ -57,6 +58,15 @@ bot = updater.bot
 # this is the regex to catch payments
 payment_regex = r'(?P<amount>[0-9]+([,.][0-9]*)?) (?P<rest>.+)'
 
+help_message = '''
+    Привет! Я - бот, который регистирует все наши траты. \n
+    Если тебе надо ввести новую трату просто введи сумму а потом ее описание. \n
+    Если хочется посмотреть отчет о тратах и среднюю сумму которую каждый из нас тратит в день набери 
+    <code>/report</code>. По умолчанию отчет будет с первого числа этого месяца. \n
+    Если тебе надо вывести отчет, начиная с другой даты, набери <code>/report 01.01.2018</code> - получишь отчет с 1 
+    января 2018 года (или с любой другой даты :) ).
+    \n Если  хочешь получить справку по командам (я буду добавлять новые...), то набери <code>/help</code>
+    '''
 
 def report(update, context):
     if context.args:
@@ -70,7 +80,8 @@ def report(update, context):
         date = todayDate.replace(day=1)
     date = date.replace(tzinfo=pytz.UTC)
     payments = Payment.objects.annotate(
-        screen_name=Concat('creator__first_name', V(' '), 'creator__last_name', output_field=CharField()), ).order_by().filter(
+        screen_name=Concat('creator__first_name', V(' '), 'creator__last_name',
+                           output_field=CharField()), ).order_by().filter(
         timestamp__gte=date).values('screen_name').annotate(total_sum=Sum('amount'), avg_sum=Avg('amount'))
     if payments.exists():
         message = f"""
@@ -85,13 +96,14 @@ def report(update, context):
         update.message.reply_text(f'Нет трат за этот период!')
 
 
-
 def start(update, context):
     """Send a message when the command /start is issued."""
-    update.message.reply_text(f'Привет! Итак, займемся твоими финансами...')
+
+    update.message.reply_html(help_message)
 
 
 def register_payment(update, context):
+    date = update.effective_message.date
     user_id = update.message.from_user.id
     fname = update.message.from_user.first_name
     lname = update.message.from_user.last_name
@@ -106,11 +118,12 @@ def register_payment(update, context):
                            description=rest,
                            creator=user
                            )
+    gsheet_register_payment(date=date, user_id=user_id, user_name=f'{fname} {lname}', val=val, rest=rest)
 
 
 def help(update, context):
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+    update.message.reply_html(help_message)
 
 
 def error(update, context):
