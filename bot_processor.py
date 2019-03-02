@@ -1,5 +1,13 @@
 print('hello!')
 from access_gsheet import write_val, get_users, register_user
+from django.conf import settings
+import django
+django.setup()
+from budget.models import Payment
+# settings.configure(default_settings='budget_telebot.settings')
+
+# export
+# DJANGO_SETTINGS_MODULE = "budget_telebot.settings"
 
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -110,6 +118,7 @@ def send_message(chat_id, text):
 
 
 def process_payment(update, context):
+
     yes_button = InlineKeyboardButton(text="Yes \U0001F1E9\U0001F1EA", callback_data="payment_confirmed")
     no_button = InlineKeyboardButton(text="No \U0001F1FA\U0001F1F8", callback_data="payment_cancelled")
     # todo: emoji inline keyboard
@@ -120,6 +129,7 @@ def process_payment(update, context):
 
 
 def main():
+
     start_handler = CommandHandler("start", start)
     help_handler = CommandHandler("help", help)
     # we try to grasp all messages starting with digits here to process them as new records
