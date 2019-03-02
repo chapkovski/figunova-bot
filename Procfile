@@ -1,2 +1,3 @@
-web: gunicorn myproject.wsgi
-worker: python bot_processor.py
+web: gunicorn budget_telebot.wsgi
+#worker: python manage.py
+#worker: python bot_processor.py
