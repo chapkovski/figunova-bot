@@ -1,5 +1,5 @@
 print('hello!')
-from access_gsheet import gsheet_register_payment
+from access_gsheet import gsheet_register_payment, delete_gsheet_record
 from django.conf import settings
 from utils import cp
 import django
@@ -31,9 +31,8 @@ import logging
 import telegram
 from emoji import emojize
 
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, StringRegexHandler
-from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
-from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
+from telegram.ext import (Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, ConversationHandler)
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup)
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -93,9 +92,9 @@ def keyboard(items):
         return None
     delete_buttons_row = []
     for i, j in enumerate(items):
-        delete_buttons_row .append(InlineKeyboardButton(f'{i + 1}', callback_data=j.update))
+        delete_buttons_row.append(InlineKeyboardButton(f'{i + 1}', callback_data=j.update))
     cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
-    return InlineKeyboardMarkup( [delete_buttons_row, cancel_row])
+    return InlineKeyboardMarkup([delete_buttons_row, cancel_row])
 
 
 def delete(update, context):
@@ -181,11 +180,11 @@ def report(update, context):
         timestamp__gte=date).values('screen_name').annotate(total_sum=Sum('amount'), avg_sum=Avg('amount'))
     if payments.exists():
         message = f"""
-         <b>Траты начиная с {date.strftime('%d-%m-%y')}:</b> \n    
+         <b>Траты начиная с {date.strftime('%d-%m-%y')}:</b>
          """
         for p in payments:
             message += f"""
-            <i>{p['screen_name']}</i>: Всего: <b>{p['total_sum']}</b>. В среднем за день: {p['avg_sum']} \n
+            <i>{p['screen_name']}</i>: Всего: <b>{p['total_sum']}</b>. В среднем за день: {p['avg_sum']}
             """
         update.message.reply_html(text=message)
     else:
@@ -216,8 +215,14 @@ def register_payment(update, context):
                            creator=user,
                            update=update_id
                            )
-    gsheet_register_payment(date=date, user_id=user_id, user_name=f'{fname} {lname}', val=val, rest=rest)
+    gsheet_register_payment(date=date,
+                            user_id=user_id,
+                            user_name=f'{fname} {lname}',
+                            val=val,
+                            rest=rest,
+                            update_id=update_id)
     success = emojize(':thumbsup:', use_aliases=True)
+
     update.message.reply_text(success, quote=False)
 
 
@@ -231,15 +236,34 @@ def error(update, context):
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
-def send_message(chat_id, text):
-    users = [p for p in get_users() if p != str(chat_id)]
-    if users:
-        for u in users:
-            bot.sendMessage(chat_id=u, text=text, )
+
 
 
 def process_payment(update, context):
     register_payment(update, context)
+
+
+def cancel(update, context):
+    user_data = context.user_data
+    cp(user_data)
+    return ConversationHandler.END
+
+
+def receive_delete_msg(update, context):
+    # cp(context.user_data)
+    if update.callback_query.data == 'cancel':
+        cp('отмена')
+    else:
+        try:
+            update_id = update.callback_query.data
+            Payment.objects.filter(update=update_id).delete()
+            delete_gsheet_record(update_id)
+        except Payment.DoesNotExist:
+            update.message.reply_html('что-то пошло не так. Спросите у фильки')
+    update.callback_query.answer(show_alert=False, text="Пыщь!")
+    bot.delete_message(chat_id=update.callback_query.message.chat.id,
+                       message_id=update.callback_query.message.message_id)
+    # bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="Пыщь!")
 
 
 def main():
@@ -250,7 +274,10 @@ def main():
     # we try to grasp all messages starting with digits here to process them as new records
     largest_handler = CommandHandler("largest", largest, pass_args=True)
     payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment, pass_user_data=True)
-    handlers = [start_handler, help_handler, delete_handler, largest_handler, report_handler, payment_handler]
+    callback_delete_handler = CallbackQueryHandler(receive_delete_msg, pass_user_data=True)
+
+    handlers = [start_handler, help_handler, delete_handler, callback_delete_handler,
+                largest_handler, report_handler, payment_handler]
     for handler in handlers:
         dp.add_handler(handler)
 
