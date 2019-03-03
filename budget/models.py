@@ -5,6 +5,12 @@ from django.db import models
 from django.db import models
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=10000)
+    emoji = models.CharField(max_length=100)
+
+
 class Payment(models.Model):
     class Meta:
         ordering = ['-timestamp']
@@ -13,6 +19,8 @@ class Payment(models.Model):
     description = models.CharField(max_length=100000)
     timestamp = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(to='Payer', related_name='payments', on_delete=models.CASCADE)
+    category = models.ForeignKey(to='Category',related_name='payments', on_delete=models.CASCADE, null=True)
+    update = models.CharField(max_length=1000, unique=True)
 
     def __str__(self):
         return f'{self.creator} заплатил {self.amount} за {self.description}'

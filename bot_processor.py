@@ -30,6 +30,7 @@ import logging
 
 import telegram
 from emoji import emojize
+
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, StringRegexHandler
 from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
@@ -52,7 +53,9 @@ REQUEST_KWARGS = {
 }
 """Start the bot."""
 
-updater = Updater(TOKEN, request_kwargs=REQUEST_KWARGS, use_context=True)
+updater = Updater(TOKEN,
+                  # request_kwargs=REQUEST_KWARGS,
+                  use_context=True)
 dp = updater.dispatcher
 bot = updater.bot
 # this is the regex to catch payments
@@ -67,10 +70,98 @@ help_message = '''
     января 2018 года (или с любой другой даты :) ).
     \n Если  хочешь получить справку по командам (я буду добавлять новые...), то набери <code>/help</code>
     '''
+# TODO START
+# TODO alert when something is deleted
+# if call.message:
+#     if call.data == "test":
+#         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+#         bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="Пыщь!")
+# TODO:
+""" 
+When somebody sends the request \delete we get him 5 last messages and inline keyboard to choose
+which one to delete.
+When he clicks on the button, the message id of callback data is passed back and the item is deleted.
+The answer_callback_query reposnds a notification.
+Previous message (with list of 5 last items) is deleted(??)
+ 
+  """
+
+
+def keyboard(items):
+    """ Return keyboard with buttons to delete one item."""
+    if not items.exists():
+        return None
+    delete_buttons_row = []
+    for i, j in enumerate(items):
+        delete_buttons_row .append(InlineKeyboardButton(f'{i + 1}', callback_data=j.update))
+    cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
+    return InlineKeyboardMarkup( [delete_buttons_row, cancel_row])
+
+
+def delete(update, context):
+    n = 5
+    user_id = update.message.from_user.id
+    try:
+        user = Payer.objects.get(telegram_id=user_id)
+    except Payer.DoesNotExist:
+        update.message.reply_text(f'Не могу найти никаких записей о тебе, чувак...')
+        return
+    last_n = Payment.objects.filter(creator=user)[:n]
+    kb = keyboard(last_n)
+    if last_n.exists():
+        message = f"""
+         <b>Выбери что удалить:</b>    
+         """
+        for i, p in enumerate(last_n):
+            message += f"""
+             {i + 1}. ({p.timestamp.strftime('%d-%m-%y')}) {p.description}: {p.amount}
+            """
+        update.message.reply_html(text=message, reply_markup=kb, )
+    else:
+        update.message.reply_text(f'Чет не могу найти последних трат. Спроси у фильки что за хуйня')
+    if update.callback_query:
+        update.callback_query.answer()
+
+
+# TODO END
+
 
 # todo: N largest (5 by default) of current user since a specific date
 def largest(update, context):
-    pass
+    try:
+        how_many = int(context.args[0])
+    except (IndexError, ValueError):
+        how_many = 5
+    try:
+        raw_date = context.args[1]
+
+    except IndexError:
+        todayDate = datetime.datetime.now()
+        raw_date = str(todayDate.replace(day=1))
+    try:
+        date = parser.parse(raw_date)
+    except ValueError:
+        update.message.reply_text(f'Чет какая-то поебота вместо даты, попробуй еще раз...')
+        return
+    user_id = update.message.from_user.id
+    try:
+        user = Payer.objects.get(telegram_id=user_id)
+    except Payer.DoesNotExist:
+        update.message.reply_text(f'Не могу найти никаких записей о тебе, чувак...')
+        return
+    date = date.replace(tzinfo=pytz.UTC)
+    payments = Payment.objects.filter(creator=user, timestamp__gte=date).order_by('-amount')[:how_many]
+    if payments.exists():
+        message = f"""
+         <b>Top-{how_many} трат с {date.strftime('%d-%m-%y')}:</b> \n    
+         """
+        for i, p in enumerate(payments):
+            message += f"""
+             {i + 1}. ({p.timestamp.strftime('%d-%m-%y')}) {p.description}: {p.amount}
+            """
+        update.message.reply_html(text=message)
+    else:
+        update.message.reply_text(f'Никаких трат в этом периоде, везуха!')
 
 
 def report(update, context):
@@ -109,6 +200,7 @@ def start(update, context):
 
 def register_payment(update, context):
     date = update.effective_message.date
+    update_id = update.update_id
     user_id = update.message.from_user.id
     fname = update.message.from_user.first_name
     lname = update.message.from_user.last_name
@@ -121,10 +213,12 @@ def register_payment(update, context):
     rest = context.match.groupdict().get('rest')
     Payment.objects.create(amount=val,
                            description=rest,
-                           creator=user
+                           creator=user,
+                           update=update_id
                            )
     gsheet_register_payment(date=date, user_id=user_id, user_name=f'{fname} {lname}', val=val, rest=rest)
-
+    success = emojize(':thumbsup:', use_aliases=True)
+    update.message.reply_text(success, quote=False)
 
 
 def help(update, context):
@@ -151,11 +245,12 @@ def process_payment(update, context):
 def main():
     start_handler = CommandHandler("start", start)
     help_handler = CommandHandler("help", help)
+    delete_handler = CommandHandler("delete", delete)
     report_handler = CommandHandler("report", report, pass_args=True)
     # we try to grasp all messages starting with digits here to process them as new records
+    largest_handler = CommandHandler("largest", largest, pass_args=True)
     payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment, pass_user_data=True)
-
-    handlers = [start_handler, help_handler, payment_handler, report_handler]
+    handlers = [start_handler, help_handler, delete_handler, largest_handler, report_handler, payment_handler]
     for handler in handlers:
         dp.add_handler(handler)
 
