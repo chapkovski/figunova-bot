@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cc920fb4-a8a7-44ab-99b8-bf700758da51" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/access_gsheet.py" beforeDir="false" afterPath="$PROJECT_DIR$/access_gsheet.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bot_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_processor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
     </list>
@@ -15,7 +14,7 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/telegrambot$inline.coverage" NAME="inline Coverage Results" MODIFIED="1551606162536" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/telegrambot$access_gsheet.coverage" NAME="access_gsheet Coverage Results" MODIFIED="1551366390126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/telegrambot$bot_processor.coverage" NAME="bot_processor Coverage Results" MODIFIED="1551639045561" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/telegrambot$bot_processor.coverage" NAME="bot_processor Coverage Results" MODIFIED="1551639894544" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -48,23 +47,14 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/bot_processor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="303">
-              <caret line="262" column="28" lean-forward="true" selection-start-line="262" selection-start-column="28" selection-end-line="262" selection-end-column="28" />
+            <state relative-caret-position="254">
+              <caret line="167" column="73" selection-start-line="167" selection-start-column="73" selection-end-line="167" selection-end-column="73" />
               <folding>
-                <element signature="e#16#77#0" expanded="true" />
+                <element signature="e#16#87#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../Documents/telebot_env/lib/python3.6/site-packages/telegram/callbackquery.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="124">
-              <caret line="110" column="37" selection-start-line="110" selection-start-column="16" selection-end-line="110" selection-end-column="37" />
             </state>
           </provider>
         </entry>
@@ -140,6 +130,7 @@
       <find>gsheet_register_payment</find>
       <find>answer</find>
       <find>report</find>
+      <find>largest</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -359,12 +350,12 @@
       <option name="presentableId" value="Default" />
       <updated>1551360519321</updated>
       <workItem from="1551360521569" duration="13660000" />
-      <workItem from="1551441113288" duration="36161000" />
+      <workItem from="1551441113288" duration="36543000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="49821000" />
+    <option name="totallyTimeSpent" value="50203000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="30" y="27" width="1440" height="827" extended-state="0" />
@@ -580,16 +571,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/bot_processor.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="262" column="28" lean-forward="true" selection-start-line="262" selection-start-column="28" selection-end-line="262" selection-end-column="28" />
-          <folding>
-            <element signature="e#16#77#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../Documents/telebot_env/lib/python3.6/site-packages/telegram/bot.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="151">
@@ -599,8 +580,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../Documents/telebot_env/lib/python3.6/site-packages/telegram/callbackquery.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="124">
-          <caret line="110" column="37" selection-start-line="110" selection-start-column="16" selection-end-line="110" selection-end-column="37" />
+        <state relative-caret-position="195">
+          <caret line="108" column="15" lean-forward="true" selection-start-line="108" selection-start-column="15" selection-end-line="108" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bot_processor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="254">
+          <caret line="167" column="73" selection-start-line="167" selection-start-column="73" selection-end-line="167" selection-end-column="73" />
+          <folding>
+            <element signature="e#16#87#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

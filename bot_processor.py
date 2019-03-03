@@ -6,13 +6,15 @@ import django
 from dateutil import parser
 from django.db.models.functions import Concat
 from django.db.models import CharField, Value as V
-
+from telegram import ChatAction
 import pytz
+from functools import wraps
+import datetime
+from django.db.models import Sum, Avg
+
 
 django.setup()
 from budget.models import Payment, Payer
-import datetime
-from django.db.models import Sum, Avg
 
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -86,6 +88,17 @@ Previous message (with list of 5 last items) is deleted(??)
   """
 
 
+def send_typing_action(func):
+    """Sends typing action while processing func command."""
+
+    @wraps(func)
+    def command_func(update, context, *args, **kwargs):
+        context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
+        return func(update, context,  *args, **kwargs)
+
+    return command_func
+
+
 def keyboard(items):
     """ Return keyboard with buttons to delete one item."""
     if not items.exists():
@@ -152,12 +165,9 @@ def largest(update, context):
     payments = Payment.objects.filter(creator=user, timestamp__gte=date).order_by('-amount')[:how_many]
     if payments.exists():
         message = f"""
-         <b>Top-{how_many} трат с {date.strftime('%d-%m-%y')}:</b> \n    
-         """
+         <b>Твои top-{how_many} трат с {date.strftime('%d-%m-%y')}:</b>\n"""
         for i, p in enumerate(payments):
-            message += f"""
-             {i + 1}. ({p.timestamp.strftime('%d-%m-%y')}) {p.description}: {p.amount}
-            """
+            message += f"""{i + 1}. ({p.timestamp.strftime('%d-%m-%y')}) {p.description}: {p.amount}\n"""
         update.message.reply_html(text=message)
     else:
         update.message.reply_text(f'Никаких трат в этом периоде, везуха!')
@@ -179,13 +189,9 @@ def report(update, context):
                            output_field=CharField()), ).order_by().filter(
         timestamp__gte=date).values('screen_name').annotate(total_sum=Sum('amount'), avg_sum=Avg('amount'))
     if payments.exists():
-        message = f"""
-         <b>Траты начиная с {date.strftime('%d-%m-%y')}:</b>
-         """
+        message = f"""<b>Траты начиная с {date.strftime('%d-%m-%y')}:</b>\n"""
         for p in payments:
-            message += f"""
-            <i>{p['screen_name']}</i>: Всего: <b>{p['total_sum']}</b>. В среднем за день: {p['avg_sum']}
-            """
+            message += f"""<i>{p['screen_name']}</i>: Всего: <b>{round(p['total_sum'],0)}</b>. В среднем за день: {round(p['avg_sum'],0)}\n"""
         update.message.reply_html(text=message)
     else:
         update.message.reply_text(f'Нет трат за этот период!')
@@ -238,7 +244,7 @@ def error(update, context):
 
 
 
-
+@send_typing_action
 def process_payment(update, context):
     register_payment(update, context)
 
@@ -247,6 +253,7 @@ def cancel(update, context):
     user_data = context.user_data
     cp(user_data)
     return ConversationHandler.END
+
 
 
 def receive_delete_msg(update, context):
