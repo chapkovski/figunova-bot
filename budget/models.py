@@ -33,3 +33,11 @@ class Payer(models.Model):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
+
+class Currency(models.Model):
+    payer = models.ForeignKey(to='Payer', related_name='currencies', on_delete=models.CASCADE, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    rate = models.FloatField()
+    name = models.CharField(max_length=100)
+class CurrencyQuote(models.Model):
+    quote = models.JSON

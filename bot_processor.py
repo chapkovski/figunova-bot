@@ -6,15 +6,16 @@ import django
 from dateutil import parser
 from django.db.models.functions import Concat
 from django.db.models import CharField, Value as V
-from telegram import ChatAction
+from telegram import (ChatAction, ReplyKeyboardMarkup)
+
 import pytz
 from functools import wraps
 import datetime
 from django.db.models import Sum, Avg
-
+from constants import CurrencyChatChoices, regex_pop_currencies, pop_currencies
 
 django.setup()
-from budget.models import Payment, Payer
+from budget.models import Payment, Payer, Currency
 
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -88,13 +89,22 @@ Previous message (with list of 5 last items) is deleted(??)
   """
 
 
+def get_user(from_user):
+    user_id = from_user.id
+    fname = from_user.first_name
+    lname = from_user.last_name
+    user_info = {'first_name': fname, 'last_name': lname}
+    user, _ = Payer.objects.get_or_create(telegram_id=user_id, defaults=user_info)
+    return user
+
+
 def send_typing_action(func):
     """Sends typing action while processing func command."""
 
     @wraps(func)
     def command_func(update, context, *args, **kwargs):
         context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
-        return func(update, context,  *args, **kwargs)
+        return func(update, context, *args, **kwargs)
 
     return command_func
 
@@ -191,7 +201,9 @@ def report(update, context):
     if payments.exists():
         message = f"""<b>Траты начиная с {date.strftime('%d-%m-%y')}:</b>\n"""
         for p in payments:
-            message += f"""<i>{p['screen_name']}</i>: Всего: <b>{round(p['total_sum'],0)}</b>. В среднем за день: {round(p['avg_sum'],0)}\n"""
+            message += f"""<i>{p['screen_name']}</i>: Всего: <b>{round(p['total_sum'],
+                                                                       0)}</b>. В среднем за день: {round(p['avg_sum'],
+                                                                                                          0)}\n"""
         update.message.reply_html(text=message)
     else:
         update.message.reply_text(f'Нет трат за этот период!')
@@ -242,8 +254,6 @@ def error(update, context):
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
-
-
 @send_typing_action
 def process_payment(update, context):
     register_payment(update, context)
@@ -253,7 +263,6 @@ def cancel(update, context):
     user_data = context.user_data
     cp(user_data)
     return ConversationHandler.END
-
 
 
 def receive_delete_msg(update, context):
@@ -273,6 +282,37 @@ def receive_delete_msg(update, context):
     # bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="Пыщь!")
 
 
+def currency(update, context):
+    reply_keyboard = [pop_currencies,
+                      ['Done']]
+    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+    update.message.reply_text(
+        "Выбери валюту в которой ты хочешь вести учет",
+        reply_markup=markup)
+
+    return CurrencyChatChoices.POP_CURRENCY_CHOICE
+
+
+def regular_currency_choice(update, context):
+    text = update.message.text
+    context.user_data['choice'] = text
+    update.message.reply_text(f'Меняю валюту на {text}')
+    user = get_user(update.message.from_user)
+    user.`
+    return ConversationHandler.END
+
+
+def currency_done(update, context):
+    user_data = context.user_data
+    cp(user_data)
+    if 'choice' in user_data:
+        del user_data['choice']
+
+    update.message.reply_text(f"{user_data}")
+    user_data.clear()
+    return ConversationHandler.END
+
+
 def main():
     start_handler = CommandHandler("start", start)
     help_handler = CommandHandler("help", help)
@@ -282,9 +322,25 @@ def main():
     largest_handler = CommandHandler("largest", largest, pass_args=True)
     payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment, pass_user_data=True)
     callback_delete_handler = CallbackQueryHandler(receive_delete_msg, pass_user_data=True)
+    ########### BLOCK: CONVERSATION ABOUT CURRENCY ##############################################################
+    cp(f'^({regex_pop_currencies})$')
+    popular_currency_handler = MessageHandler(Filters.regex(f'^({regex_pop_currencies})$'),
+                                              regular_currency_choice,
+                                              pass_user_data=True)
+    done_handler = MessageHandler(Filters.regex('^Done$'),
+                                  currency_done,
+                                  pass_user_data=True)
+    currency_chat_handler = ConversationHandler(
+        entry_points=[CommandHandler('currency', currency)],
+        states={
+            CurrencyChatChoices.POP_CURRENCY_CHOICE: [popular_currency_handler],
+        },
+        fallbacks=[done_handler]
+    )
+    ############ END OF: CONVERSATION ABOUT CURRENCY #############################################################
 
     handlers = [start_handler, help_handler, delete_handler, callback_delete_handler,
-                largest_handler, report_handler, payment_handler]
+                largest_handler, report_handler, currency_chat_handler, payment_handler]
     for handler in handlers:
         dp.add_handler(handler)
 
