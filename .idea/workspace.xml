@@ -33,18 +33,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/budget/currtesting.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="24" column="26" lean-forward="true" selection-start-line="24" selection-start-column="26" selection-end-line="24" selection-end-column="26" />
-              <folding>
-                <element signature="e#0#39#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/bot_processor.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -67,45 +55,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/constants.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/command_descriptions_for_bot_father.md">
-          <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
-            <state split_layout="SPLIT">
-              <first_editor relative-caret-position="45">
-                <caret line="3" column="25" selection-end-line="4" selection-end-column="15" />
-              </first_editor>
-              <second_editor>
-                <js_state />
-              </second_editor>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/quote_requester.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" column="19" selection-start-line="14" selection-start-column="19" selection-end-line="14" selection-end-column="19" />
-              <folding>
-                <element signature="e#0#15#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/inline.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="174">
-              <caret line="135" column="30" lean-forward="true" selection-start-line="132" selection-start-column="27" selection-end-line="135" selection-end-column="30" />
+              <caret line="135" column="30" selection-start-line="132" selection-start-column="27" selection-end-line="135" selection-end-column="30" />
               <folding>
                 <element signature="e#779#793#0" expanded="true" />
               </folding>
@@ -117,7 +70,7 @@
         <entry file="file://$PROJECT_DIR$/requirements.txt">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="150">
-              <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+              <caret line="10" selection-start-line="10" selection-end-line="10" />
             </state>
           </provider>
         </entry>
@@ -453,8 +406,8 @@
     <list>
       <item itemvalue="Python.access_gsheet" />
       <item itemvalue="Python.bot_processor" />
-      <item itemvalue="Python.inline" />
       <item itemvalue="Python.currency_converter" />
+      <item itemvalue="Python.inline" />
     </list>
     <recent_temporary>
       <list>
@@ -477,12 +430,12 @@
       <updated>1551360519321</updated>
       <workItem from="1551360521569" duration="13660000" />
       <workItem from="1551441113288" duration="40966000" />
-      <workItem from="1551698673414" duration="18675000" />
+      <workItem from="1551698673414" duration="19079000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="73301000" />
+    <option name="totallyTimeSpent" value="73705000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="827" extended-state="6" />
@@ -694,7 +647,7 @@
     <entry file="file://$PROJECT_DIR$/requirements.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="150">
-          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
         </state>
       </provider>
     </entry>
@@ -735,7 +688,7 @@
     <entry file="file://$PROJECT_DIR$/inline.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="174">
-          <caret line="135" column="30" lean-forward="true" selection-start-line="132" selection-start-column="27" selection-end-line="135" selection-end-column="30" />
+          <caret line="135" column="30" selection-start-line="132" selection-start-column="27" selection-end-line="135" selection-end-column="30" />
           <folding>
             <element signature="e#779#793#0" expanded="true" />
           </folding>
