@@ -6,7 +6,7 @@ import django
 from dateutil import parser
 from django.db.models.functions import Concat
 from django.db.models import CharField, Value as V
-from telegram import (ChatAction, ReplyKeyboardMarkup)
+from telegram import (ChatAction, ReplyKeyboardMarkup, ForceReply,ReplyKeyboardRemove)
 
 import pytz
 from functools import wraps
@@ -15,7 +15,8 @@ from django.db.models import Sum, Avg
 from constants import CurrencyChatChoices, regex_pop_currencies, pop_currencies
 
 django.setup()
-from budget.models import Payment, Payer, Currency
+from budget.models import Payment, Payer, Currency, CurrencyQuote
+from budget.exceptions import NoSuchCurrency
 
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -215,18 +216,16 @@ def start(update, context):
     update.message.reply_html(help_message)
 
 
+@send_typing_action
 def register_payment(update, context):
     date = update.effective_message.date
     update_id = update.update_id
-    user_id = update.message.from_user.id
-    fname = update.message.from_user.first_name
-    lname = update.message.from_user.last_name
-    user_info = {'first_name': fname, 'last_name': lname}
-    user, _ = Payer.objects.get_or_create(telegram_id=user_id, defaults=user_info)
+    user = get_user(update.message.from_user)
+    rate = user.get_rate()
     """Connect to DB and register new payment there."""
     #
     raw_amount = context.match.groupdict().get('amount')
-    val = float(raw_amount)
+    val = round(float(raw_amount) * rate, 2)
     rest = context.match.groupdict().get('rest')
     Payment.objects.create(amount=val,
                            description=rest,
@@ -234,13 +233,12 @@ def register_payment(update, context):
                            update=update_id
                            )
     gsheet_register_payment(date=date,
-                            user_id=user_id,
-                            user_name=f'{fname} {lname}',
+                            user_id=user.telegram_id,
+                            user_name=f'{user.first_name} {user.last_name}',
                             val=val,
                             rest=rest,
                             update_id=update_id)
-    success = emojize(':thumbsup:', use_aliases=True)
-
+    success = emojize(f':white_check_mark: ({val} рублей)', use_aliases=True)
     update.message.reply_text(success, quote=False)
 
 
@@ -254,14 +252,9 @@ def error(update, context):
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
-@send_typing_action
-def process_payment(update, context):
-    register_payment(update, context)
-
-
 def cancel(update, context):
     user_data = context.user_data
-    cp(user_data)
+    ReplyKeyboardRemove()
     return ConversationHandler.END
 
 
@@ -282,34 +275,47 @@ def receive_delete_msg(update, context):
     # bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="Пыщь!")
 
 
-def currency(update, context):
+def currency_start(update, context):
     reply_keyboard = [pop_currencies,
-                      ['Done']]
+                      ['Другая валюта'],
+                      ['Отмена']]
     markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
     update.message.reply_text(
         "Выбери валюту в которой ты хочешь вести учет",
         reply_markup=markup)
 
-    return CurrencyChatChoices.POP_CURRENCY_CHOICE
+    return CurrencyChatChoices.choosing_currency
 
 
-def regular_currency_choice(update, context):
-    text = update.message.text
-    context.user_data['choice'] = text
-    update.message.reply_text(f'Меняю валюту на {text}')
+def custom_currency_choice(update, context):
+    update.message.reply_text("Введите название валюты (три буквы типа USD, EUR. Если что - спросите у Фильки.",
+                              reply_markup=ForceReply())
+    return CurrencyChatChoices.input
+
+
+def check_register_currency(update, context):
+    currency_name = update.message.text
+    if currency_name != 'RUB':
+        try:
+            quote = CurrencyQuote.get_quote(currency_name)
+        except NoSuchCurrency:
+            update.message.reply_text("Не могу найти название валюты. Попробуйте RUB или спросите у Фильки",
+                                      reply_markup=ForceReply())
+            return CurrencyChatChoices.input
     user = get_user(update.message.from_user)
-    user.`
-    return ConversationHandler.END
+    user.currencies.create(name=currency_name)
+    if currency_name != 'RUB':
+        update.message.reply_text(f"Теперь все твои траты будут считаться в {currency_name} по курсу {quote} рублей")
+    else:
+        update.message.reply_text(f"Считаем отныне все в старых добрых рублях")
+    return currency_done(update, context)
 
 
 def currency_done(update, context):
+    cp(update.callback_query)
     user_data = context.user_data
-    cp(user_data)
-    if 'choice' in user_data:
-        del user_data['choice']
-
-    update.message.reply_text(f"{user_data}")
     user_data.clear()
+    update.message.reply_text("\U0001F44D", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
 
@@ -320,20 +326,30 @@ def main():
     report_handler = CommandHandler("report", report, pass_args=True)
     # we try to grasp all messages starting with digits here to process them as new records
     largest_handler = CommandHandler("largest", largest, pass_args=True)
-    payment_handler = MessageHandler(Filters.regex(payment_regex), process_payment, pass_user_data=True)
+    payment_handler = MessageHandler(Filters.regex(payment_regex), register_payment, pass_user_data=True)
     callback_delete_handler = CallbackQueryHandler(receive_delete_msg, pass_user_data=True)
     ########### BLOCK: CONVERSATION ABOUT CURRENCY ##############################################################
-    cp(f'^({regex_pop_currencies})$')
     popular_currency_handler = MessageHandler(Filters.regex(f'^({regex_pop_currencies})$'),
-                                              regular_currency_choice,
+                                              check_register_currency,
                                               pass_user_data=True)
-    done_handler = MessageHandler(Filters.regex('^Done$'),
+    custom_choice_handler = MessageHandler(Filters.regex(f'^Другая валюта$'),
+                                           custom_currency_choice,
+                                           pass_user_data=True)
+    currency_input_handler = MessageHandler(Filters.text,
+                                            check_register_currency,
+                                            pass_user_data=True)
+
+    done_handler = MessageHandler(Filters.regex('^Отмена$'),
                                   currency_done,
                                   pass_user_data=True)
     currency_chat_handler = ConversationHandler(
-        entry_points=[CommandHandler('currency', currency)],
+        entry_points=[CommandHandler('currency', currency_start)],
         states={
-            CurrencyChatChoices.POP_CURRENCY_CHOICE: [popular_currency_handler],
+            CurrencyChatChoices.choosing_currency: [popular_currency_handler,
+                                                    custom_choice_handler,
+                                                    ],
+            CurrencyChatChoices.input: [currency_input_handler],
+
         },
         fallbacks=[done_handler]
     )

@@ -1,5 +1,13 @@
-from enum import Enum
+from enum import Enum, unique
 
-CurrencyChatChoices = Enum('CurrencyChatChoice', 'CHOOSING_CURRENCY POP_CURRENCY_CHOICE CUSTOM_CURRENCY_CHOICE')
-pop_currencies = ['USD', 'EUR', 'CFH', 'UAH']
+
+@unique
+class CurrencyChatChoices(Enum):
+    choosing_currency = 0
+    pop_currency_choice = 1
+    custom_currency_choice = 2
+    input = 3
+
+
+pop_currencies = ['RUB', 'USD', 'EUR', 'UAH']
 regex_pop_currencies = '|'.join(pop_currencies)
