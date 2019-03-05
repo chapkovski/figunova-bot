@@ -6,12 +6,12 @@ import django
 from dateutil import parser
 from django.db.models.functions import Concat
 from django.db.models import CharField, Value as V
-from telegram import (ChatAction, ReplyKeyboardMarkup, ForceReply,ReplyKeyboardRemove)
+from telegram import (ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardRemove)
 
 import pytz
 from functools import wraps
 import datetime
-from django.db.models import Sum, Avg
+from django.db.models import Sum, Avg, Min, Max
 from constants import CurrencyChatChoices, regex_pop_currencies, pop_currencies
 
 django.setup()
@@ -193,13 +193,17 @@ def report(update, context):
             return
     else:
         todayDate = datetime.datetime.now()
-        date = todayDate.replace(day=1)
+        date = todayDate.replace(day=1, hour=0, minute=0)
     date = date.replace(tzinfo=pytz.UTC)
-    payments = Payment.objects.annotate(
-        screen_name=Concat('creator__first_name', V(' '), 'creator__last_name',
-                           output_field=CharField()), ).order_by().filter(
-        timestamp__gte=date).values('screen_name').annotate(total_sum=Sum('amount'), avg_sum=Avg('amount'))
+    payments = Payment.objects.order_by().filter(timestamp__gte=date)
     if payments.exists():
+        minmaxpayments = payments.aggregate(Min('timestamp'), Max('timestamp'))
+        numdays = (minmaxpayments['timestamp__max'] - minmaxpayments['timestamp__min']).days + 1
+        payments = payments.annotate(
+            screen_name=Concat('creator__first_name', V(' '), 'creator__last_name',
+                               output_field=CharField()), ). \
+            values('screen_name').annotate(total_sum=Sum('amount'), avg_sum=(Sum('amount') / numdays))
+
         message = f"""<b>Траты начиная с {date.strftime('%d-%m-%y')}:</b>\n"""
         for p in payments:
             message += f"""<i>{p['screen_name']}</i>: Всего: <b>{round(p['total_sum'],
@@ -222,10 +226,12 @@ def register_payment(update, context):
     update_id = update.update_id
     user = get_user(update.message.from_user)
     rate = user.get_rate()
+    currency_name = user.get_current_currency()
     """Connect to DB and register new payment there."""
     #
     raw_amount = context.match.groupdict().get('amount')
     val = round(float(raw_amount) * rate, 2)
+
     rest = context.match.groupdict().get('rest')
     Payment.objects.create(amount=val,
                            description=rest,
@@ -238,7 +244,8 @@ def register_payment(update, context):
                             val=val,
                             rest=rest,
                             update_id=update_id)
-    success = emojize(f':white_check_mark: ({val} рублей)', use_aliases=True)
+    foreign_val = f'{raw_amount} {currency_name}; ' if currency_name != 'RUB' else ''
+    success = emojize(f':white_check_mark: ({foreign_val}{val} рублей)', use_aliases=True)
     update.message.reply_text(success, quote=False)
 
 
@@ -294,7 +301,7 @@ def custom_currency_choice(update, context):
 
 
 def check_register_currency(update, context):
-    currency_name = update.message.text
+    currency_name = update.message.text.upper()
     if currency_name != 'RUB':
         try:
             quote = CurrencyQuote.get_quote(currency_name)
@@ -312,7 +319,6 @@ def check_register_currency(update, context):
 
 
 def currency_done(update, context):
-    cp(update.callback_query)
     user_data = context.user_data
     user_data.clear()
     update.message.reply_text("\U0001F44D", reply_markup=ReplyKeyboardRemove())
