@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="cc920fb4-a8a7-44ab-99b8-bf700758da51" name="Default Changelist" comment="" />
+    <list default="true" id="cc920fb4-a8a7-44ab-99b8-bf700758da51" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_processor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,7 +16,7 @@
     <SUITE FILE_PATH="coverage/telegrambot$currency_converter.coverage" NAME="currency_converter Coverage Results" MODIFIED="1551699442084" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/telegrambot$inline.coverage" NAME="inline Coverage Results" MODIFIED="1551731273662" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/telegrambot$access_gsheet.coverage" NAME="access_gsheet Coverage Results" MODIFIED="1551366390126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/telegrambot$bot_processor.coverage" NAME="bot_processor Coverage Results" MODIFIED="1551814634792" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/telegrambot$bot_processor.coverage" NAME="bot_processor Coverage Results" MODIFIED="1551954494754" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -36,8 +40,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/bot_processor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="227">
-              <caret line="206" column="26" selection-start-line="206" selection-start-column="26" selection-end-line="206" selection-end-column="26" />
+            <state relative-caret-position="280">
+              <caret line="66" column="78" selection-start-line="66" selection-start-column="78" selection-end-line="66" selection-end-column="78" />
               <folding>
                 <element signature="e#16#87#0" expanded="true" />
               </folding>
@@ -406,8 +410,8 @@
     <list>
       <item itemvalue="Python.access_gsheet" />
       <item itemvalue="Python.bot_processor" />
-      <item itemvalue="Python.currency_converter" />
       <item itemvalue="Python.inline" />
+      <item itemvalue="Python.currency_converter" />
     </list>
     <recent_temporary>
       <list>
@@ -430,22 +434,22 @@
       <updated>1551360519321</updated>
       <workItem from="1551360521569" duration="13660000" />
       <workItem from="1551441113288" duration="40966000" />
-      <workItem from="1551698673414" duration="19320000" />
+      <workItem from="1551698673414" duration="23470000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="73946000" />
+    <option name="totallyTimeSpent" value="78096000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="827" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.5833333" visible="true" weight="0.2739628" />
-      <window_info id="Structure" order="1" sideWeight="0.41666666" side_tool="true" visible="true" weight="0.2739628" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.583682" visible="true" weight="0.2739628" />
+      <window_info id="Structure" order="1" sideWeight="0.416318" side_tool="true" visible="true" weight="0.2739628" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49946752" weight="0.3286517" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49946752" visible="true" weight="0.3286517" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -454,7 +458,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Database Changes" order="9" show_stripe_button="false" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.50143063" side_tool="true" weight="0.5014045" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" sideWeight="0.4985694" visible="true" weight="0.34269664" />
+      <window_info anchor="bottom" id="Terminal" order="11" sideWeight="0.4985694" weight="0.34269664" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.3286517" />
       <window_info anchor="bottom" id="Database Console" order="13" weight="0.3293348" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -774,8 +778,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/bot_processor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="227">
-          <caret line="206" column="26" selection-start-line="206" selection-start-column="26" selection-end-line="206" selection-end-column="26" />
+        <state relative-caret-position="280">
+          <caret line="66" column="78" selection-start-line="66" selection-start-column="78" selection-end-line="66" selection-end-column="78" />
           <folding>
             <element signature="e#16#87#0" expanded="true" />
           </folding>

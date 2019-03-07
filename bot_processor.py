@@ -62,8 +62,10 @@ updater = Updater(TOKEN,
 dp = updater.dispatcher
 bot = updater.bot
 # this is the regex to catch payments
-payment_regex = r'(?P<amount>[0-9]+([,.][0-9]*)?) (?P<rest>.+)'
-
+thousand_part = 'тыщ.?|тысяч.?|т|000'
+# We filter out thousands in letters using negative look-ahead and lookbehind.
+payment_regex = fr'^(?P<amount>[0-9]+([,.][0-9]*)?) (?P<rest>(?!{thousand_part}).+)$'
+thousand_payment_regex = fr'^(?P<amount>[0-9]+([,.][0-9]*)?)\s?(?P<thousand>{thousand_part}) (?P<rest>.+)$'
 help_message = '''
     Привет! Я - бот, который регистирует все наши траты. \n
     Если тебе надо ввести новую трату просто введи сумму а потом ее описание. \n
@@ -230,7 +232,9 @@ def register_payment(update, context):
     """Connect to DB and register new payment there."""
     #
     raw_amount = context.match.groupdict().get('amount')
-    val = round(float(raw_amount) * rate, 2)
+    thousand = context.match.groupdict().get('thousand')
+    t_corrector = 1000 if thousand else 1
+    val = round(float(raw_amount) * t_corrector * rate, 2)
 
     rest = context.match.groupdict().get('rest')
     Payment.objects.create(amount=val,
@@ -332,7 +336,8 @@ def main():
     report_handler = CommandHandler("report", report, pass_args=True)
     # we try to grasp all messages starting with digits here to process them as new records
     largest_handler = CommandHandler("largest", largest, pass_args=True)
-    payment_handler = MessageHandler(Filters.regex(payment_regex), register_payment, pass_user_data=True)
+    payment_handler = MessageHandler(Filters.regex(thousand_payment_regex) | Filters.regex(payment_regex),
+                                     register_payment, pass_user_data=True)
     callback_delete_handler = CallbackQueryHandler(receive_delete_msg, pass_user_data=True)
     ########### BLOCK: CONVERSATION ABOUT CURRENCY ##############################################################
     popular_currency_handler = MessageHandler(Filters.regex(f'^({regex_pop_currencies})$'),
