@@ -221,6 +221,7 @@ def start(update, context):
 
 @send_typing_action
 def register_payment(update, context):
+    cp(update)
     date = update.effective_message.date
     update_id = update.update_id
     user = get_user(update.message.from_user)
