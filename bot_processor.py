@@ -1,13 +1,12 @@
 print('hello!')
 from access_gsheet import gsheet_register_payment, delete_gsheet_record
-from django.conf import settings
 from utils import cp
 import django
 from dateutil import parser
 from django.db.models.functions import Concat
 from django.db.models import CharField, Value as V
 from telegram import (ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardRemove)
-
+from os import environ
 import pytz
 from functools import wraps
 import datetime
@@ -43,9 +42,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-# todo: move to env. vars
-TOKEN = '690401493:AAHuK1MUdQLCwMiSuhkZbXfoJ2YDvl6tgrc'
-# todo: get rid
+TOKEN = environ.get('TELEGRAM_API')
 REQUEST_KWARGS = {
     'proxy_url': 'socks5://phobos.public.opennetwork.cc:1090',
     # Optional, if you need authentication:
