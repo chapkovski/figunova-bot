@@ -12,7 +12,7 @@ from functools import wraps
 import datetime
 from django.db.models import Sum, Avg, Min, Max
 from constants import CurrencyChatChoices, regex_pop_currencies, pop_currencies
-
+from django.db.models.functions import TruncDay
 django.setup()
 from budget.models import Payment, Payer, Currency, CurrencyQuote
 from budget.exceptions import NoSuchCurrency
@@ -42,7 +42,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-TOKEN = environ.get('TELEGRAM_API')
+TOKEN = '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
 REQUEST_KWARGS = {
     'proxy_url': 'socks5://phobos.public.opennetwork.cc:1090',
     # Optional, if you need authentication:
@@ -64,7 +64,7 @@ thousand_part = 'тыщ.?|тысяч.?|т|000'
 payment_regex = r'(?P<amount>[0-9]+([,.][0-9]*)?) (?P<rest>.+)'
 # thousand_payment_regex = fr'^(?P<amount>[0-9]+([,.][0-9]*)?)\s?(?P<thousand>{thousand_part}) (?P<rest>.+)$'
 help_message = '''
-    Привет! Я - бот, который регистирует все наши траты. \n
+    RESERVE!!! Привет! Я - бот, который регистирует все наши траты. \n
     Если тебе надо ввести новую трату просто введи сумму а потом ее описание. \n
     Если хочется посмотреть отчет о тратах и среднюю сумму которую каждый из нас тратит в день набери 
     <code>/report</code>. По умолчанию отчет будет с первого числа этого месяца. \n
@@ -327,11 +327,26 @@ def currency_done(update, context):
     return ConversationHandler.END
 
 
+def charts(update, context):
+    chat_id = update.effective_message.chat_id
+    for p in Payment.objects.all():
+        cp(p)
+    payments = Payment.objects.all().order_by().\
+        annotate(day=TruncDay('timestamp')).\
+        values('day').\
+        annotate(sumamount=Sum('amount')).values_list('sumamount', flat=True)
+    formatted_payments = ','.join(map(str, payments))
+    url = f"""https://image-charts.com/chart?cht=lc&chs=700x300&chd=a:12,3,4,5,6|1,3,5,2,3,5|1,2,4,5,3&chdl=Ivanova|Filka|Gulin&chls=3|3|3&chtt=Гулин"""
+    bot.send_photo(chat_id=chat_id, photo=url)
+    # update.message.reply_text("https://chart.googleapis.com/chart?cht=p3&chd=t:60,40&chs=800x300&chl=Yes|No")
+
+
 def main():
     start_handler = CommandHandler("start", start)
     help_handler = CommandHandler("help", help)
     delete_handler = CommandHandler("delete", delete)
     report_handler = CommandHandler("report", report, pass_args=True)
+    charts_handler = CommandHandler("chart", charts, pass_args=True)
     # we try to grasp all messages starting with digits here to process them as new records
     largest_handler = CommandHandler("largest", largest, pass_args=True)
     payment_handler = MessageHandler(Filters.regex(payment_regex),
@@ -364,7 +379,7 @@ def main():
     )
     ############ END OF: CONVERSATION ABOUT CURRENCY #############################################################
 
-    handlers = [start_handler, help_handler, delete_handler, callback_delete_handler,
+    handlers = [start_handler, charts_handler, help_handler, delete_handler, callback_delete_handler,
                 largest_handler, report_handler, currency_chat_handler, payment_handler]
     for handler in handlers:
         dp.add_handler(handler)

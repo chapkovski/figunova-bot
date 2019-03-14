@@ -32,7 +32,7 @@ class Payment(TimeStampModel):
     update = models.CharField(max_length=1000, unique=True)
 
     def __str__(self):
-        return f'{self.creator} заплатил {self.amount} за {self.description}'
+        return f'{self.creator} заплатил {self.amount} за {self.description} числа: {self.timestamp}'
 
 
 class Payer(models.Model):
@@ -42,6 +42,7 @@ class Payer(models.Model):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
+
     def get_current_currency(self):
         curs = self.currencies.all()
         if curs.exists():
