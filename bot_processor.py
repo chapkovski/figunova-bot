@@ -343,7 +343,7 @@ def chart_start(update, context):
 def individual_chart(update, context):
     telegram_id = context.match.groupdict()['telegram_id']
     chart = IndividualChart(telegram_id)
-    update.callback_query.message.reply_photo(chart.get_url())
+    update.callback_query.message.reply_photo(chart.get_url(), quote=False)
     update.callback_query.message.delete()
 
 
