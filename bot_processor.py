@@ -38,7 +38,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-TOKEN = '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
+TOKEN = environ.get('TELEGRAM_API')
+#  '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
 REQUEST_KWARGS = {
     'proxy_url': 'socks5://phobos.public.opennetwork.cc:1090',
     # Optional, if you need authentication:
