@@ -1,13 +1,8 @@
-import chartify
+import numpy as np
+from utils import cp
 
-# Blank charts tell you how to fill in the labels
-ch = chartify.Chart()
-# print(ch)
-import tempfile
-contents = ch._figure_to_svg()
-tf = tempfile.NamedTemporaryFile()
-tfName = tf.name
-tf.seek(0)
-tf.write(contents)
-# tf.flush()
-
+x = y = [1, 2, 3]
+a, b = np.polyfit(x, y, deg=1)
+cp(a, b)
+predicted = [a * i + b for i in x]
+cp(predicted)

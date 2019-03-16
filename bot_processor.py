@@ -5,14 +5,15 @@ import django
 from dateutil import parser
 from django.db.models.functions import Concat
 from django.db.models import CharField, Value as V
-from telegram import (ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardRemove)
+from telegram import (ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardRemove, KeyboardButton)
 from os import environ
+from telegram.ext import CallbackContext
 import pytz
 from functools import wraps
 import datetime
 from django.db.models import Sum, Avg, Min, Max
-from constants import CurrencyChatChoices, regex_pop_currencies, pop_currencies
-from django.db.models.functions import TruncDay
+from constants import CurrencyChatChoices, regex_pop_currencies, pop_currencies, ChartChoices
+
 django.setup()
 from budget.models import Payment, Payer, Currency, CurrencyQuote
 from budget.exceptions import NoSuchCurrency
@@ -36,6 +37,7 @@ from emoji import emojize
 
 from telegram.ext import (Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, ConversationHandler)
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup)
+from charts import Chart
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -118,6 +120,21 @@ def keyboard(items):
         delete_buttons_row.append(InlineKeyboardButton(f'{i + 1}', callback_data=j.update))
     cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
     return InlineKeyboardMarkup([delete_buttons_row, cancel_row])
+
+
+def users_keyboard(users):
+    """ Return keyboard with user names to show a graph for specific user."""
+    if not users.exists():
+        return None
+    rows = []
+    for i in users:
+        rows.append(InlineKeyboardButton(f'{i.first_name} {i.last_name}',
+                                         callback_data=f'telegram_id_{i.telegram_id}'))
+    cp(rows)
+
+    cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
+    cp(cancel_row)
+    return InlineKeyboardMarkup([rows, cancel_row])
 
 
 def delete(update, context):
@@ -317,28 +334,33 @@ def check_register_currency(update, context):
         update.message.reply_text(f"Теперь все твои траты будут считаться в {currency_name} по курсу {quote} рублей")
     else:
         update.message.reply_text(f"Считаем отныне все в старых добрых рублях")
-    return currency_done(update, context)
+    return cancel_or_done(update, context)
 
 
-def currency_done(update, context):
+def cancel_or_done(update, context):
     user_data = context.user_data
     user_data.clear()
     update.message.reply_text("\U0001F44D", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
 
-def charts(update, context):
-    chat_id = update.effective_message.chat_id
-    for p in Payment.objects.all():
-        cp(p)
-    payments = Payment.objects.all().order_by().\
-        annotate(day=TruncDay('timestamp')).\
-        values('day').\
-        annotate(sumamount=Sum('amount')).values_list('sumamount', flat=True)
-    formatted_payments = ','.join(map(str, payments))
-    url = f"""https://image-charts.com/chart?cht=lc&chs=700x300&chd=a:12,3,4,5,6|1,3,5,2,3,5|1,2,4,5,3&chdl=Ivanova|Filka|Gulin&chls=3|3|3&chtt=Гулин"""
-    bot.send_photo(chat_id=chat_id, photo=url)
-    # update.message.reply_text("https://chart.googleapis.com/chart?cht=p3&chd=t:60,40&chs=800x300&chl=Yes|No")
+########### BLOCK: CHART HANDLES ##############################################################
+def chart_start(update, context):
+    payers = Payer.objects.all()
+    kb = users_keyboard(payers)
+    update.message.reply_text(text="Выбери про кого ты хочешь ВСЕ узнать", reply_markup=kb, )
+
+
+def individual_chart(update, context):
+    telegram_id = context.match.groupdict()['telegram_id']
+    chart = Chart(telegram_id)
+    cp(update)
+    cp(context)
+    update.callback_query.message.reply_photo(chart.get_url())
+    update.callback_query.message.delete()
+
+
+############ END OF: CHART HANDLES #############################################################
 
 
 def main():
@@ -346,7 +368,7 @@ def main():
     help_handler = CommandHandler("help", help)
     delete_handler = CommandHandler("delete", delete)
     report_handler = CommandHandler("report", report, pass_args=True)
-    charts_handler = CommandHandler("chart", charts, pass_args=True)
+
     # we try to grasp all messages starting with digits here to process them as new records
     largest_handler = CommandHandler("largest", largest, pass_args=True)
     payment_handler = MessageHandler(Filters.regex(payment_regex),
@@ -364,7 +386,7 @@ def main():
                                             pass_user_data=True)
 
     done_handler = MessageHandler(Filters.regex('^Отмена$'),
-                                  currency_done,
+                                  cancel_or_done,
                                   pass_user_data=True)
     currency_chat_handler = ConversationHandler(
         entry_points=[CommandHandler('currency', currency_start)],
@@ -377,9 +399,25 @@ def main():
         },
         fallbacks=[done_handler]
     )
+    charts_start_handler = CommandHandler('chart', chart_start)
+    individual_chart_handler = CallbackQueryHandler(individual_chart, pattern=r'^telegram_id_(?P<telegram_id>\d+)$', )
+    # charts_handler = ConversationHandler(
+    #     entry_points=[CommandHandler('chart', chart_start)],
+    #     states={
+    #         ChartChoices.choosing_user: [CallbackQueryHandler(
+    #             individual_chart,
+    #             pass_user_data=True)
+    #         ],
+    #     },
+    #     fallbacks=[done_handler],
+    # )
+
     ############ END OF: CONVERSATION ABOUT CURRENCY #############################################################
 
-    handlers = [start_handler, charts_handler, help_handler, delete_handler, callback_delete_handler,
+    handlers = [start_handler,
+                charts_start_handler,
+                individual_chart_handler,
+                help_handler, delete_handler, callback_delete_handler,
                 largest_handler, report_handler, currency_chat_handler, payment_handler]
     for handler in handlers:
         dp.add_handler(handler)
