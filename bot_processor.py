@@ -1,4 +1,11 @@
-print('hello!')
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Bot that registers the payments.
+"""
+
+print('hello! budget bot is running...')
 from access_gsheet import gsheet_register_payment, delete_gsheet_record
 from utils import cp
 import django
@@ -18,26 +25,13 @@ django.setup()
 from budget.models import Payment, Payer, Currency, CurrencyQuote
 from budget.exceptions import NoSuchCurrency
 
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
-# This program is dedicated to the public domain under the CC0 license.
-#
-# THIS EXAMPLE HAS BEEN UPDATED TO WORK WITH THE BETA VERSION 12 OF PYTHON-TELEGRAM-BOT.
-# If you're still using version 11.1.0, please see the examples at
-# https://github.com/python-telegram-bot/python-telegram-bot/tree/v11.1.0/examples
-
-"""
-Bot that registers the payments.
-"""
-
 import logging
 
-import telegram
 from emoji import emojize
 
 from telegram.ext import (Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, ConversationHandler)
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup)
-from charts import Chart
+from charts import IndividualChart, OverallChart
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -130,10 +124,8 @@ def users_keyboard(users):
     for i in users:
         rows.append(InlineKeyboardButton(f'{i.first_name} {i.last_name}',
                                          callback_data=f'telegram_id_{i.telegram_id}'))
-    cp(rows)
 
     cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
-    cp(cancel_row)
     return InlineKeyboardMarkup([rows, cancel_row])
 
 
@@ -238,7 +230,6 @@ def start(update, context):
 
 @send_typing_action
 def register_payment(update, context):
-    cp(update)
     date = update.effective_message.date
     update_id = update.update_id
     user = get_user(update.message.from_user)
@@ -285,7 +276,6 @@ def cancel(update, context):
 
 
 def receive_delete_msg(update, context):
-    # cp(context.user_data)
     if update.callback_query.data == 'cancel':
         cp('отмена')
     else:
@@ -296,9 +286,7 @@ def receive_delete_msg(update, context):
         except Payment.DoesNotExist:
             update.message.reply_html('что-то пошло не так. Спросите у фильки')
     update.callback_query.answer(show_alert=False, text="Пыщь!")
-    bot.delete_message(chat_id=update.callback_query.message.chat.id,
-                       message_id=update.callback_query.message.message_id)
-    # bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text="Пыщь!")
+    update.callback_query.message.delete()
 
 
 def currency_start(update, context):
@@ -353,9 +341,7 @@ def chart_start(update, context):
 
 def individual_chart(update, context):
     telegram_id = context.match.groupdict()['telegram_id']
-    chart = Chart(telegram_id)
-    cp(update)
-    cp(context)
+    chart = IndividualChart(telegram_id)
     update.callback_query.message.reply_photo(chart.get_url())
     update.callback_query.message.delete()
 

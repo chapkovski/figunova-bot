@@ -34,6 +34,7 @@ class Chart:
 
     def __init__(self):
         self.axes = 'x,y'
+        self.set_params()
 
     def ltoc(self, l: list, sep=',') -> str:
         """Convert lists to  comma separated strings"""
@@ -45,6 +46,27 @@ class Chart:
 
     def build_x_axis(self, xaxis_data):
         return f'0:|{self.ltoc(xaxis_data, sep="|")}'
+
+    def get_url(self):
+        context = {}
+        for k, v in key_correspondence.items():
+            if hasattr(self, k):
+                context[v] = getattr(self, k)
+        """convert object's attributes to dict and convert them via urlunparse"""
+        return f'{self.entry_point}?{urlencode(context)}'
+
+    def set_params(self):
+        pass
+
+
+class IndividualChart(Chart):
+    """Build a chart with  average spending per day for individual user."""
+
+    def __init__(self, payer_id):
+        self.payer_id = payer_id
+        self.payer = Payer.objects.get(telegram_id=payer_id)
+        self.title = trans_ru(str(self.payer))
+        super().__init__()
 
     def get_lfit(self, data):
         x = range(len(data))
@@ -71,22 +93,13 @@ class Chart:
     def get_line_color(self):
         return f'{Color.Blue}22,{Color.Red}'
 
-    def get_context(self):
+    def set_params(self):
         axis_labels, data, = self.get_user_payments()
         self.axis_labels = self.build_x_axis(axis_labels)
         self.data = self.build_series(data)
         self.legend = self.get_legend()
         self.line_style = self.get_line_style()
         self.line_color = self.get_line_color()
-        context = {}
-        for k, v in key_correspondence.items():
-            if hasattr(self, k):
-                context[v] = getattr(self, k)
-        return context
-
-    def get_url(self):
-        """convert object's attributes to dict and convert them via urlunparse"""
-        return f'{self.entry_point}?{urlencode(self.get_context())}'
 
     def get_user_payments(self):
         """Builds a universal query based on filter param (ft) from payments.
@@ -106,29 +119,52 @@ class Chart:
         return days, amounts
 
 
-class IndividualChart(Chart):
-    """Build a chart with  average spending per day for individual user."""
-    def __init__(self, payer_id):
-        self.payer_id = payer_id
-        self.payer = Payer.objects.get(telegram_id=payer_id)
-        self.title = trans_ru(str(self.payer))
+class OverallChart(Chart):
+    """Build a series of average spending per day for all registered users"""
+    def __init__(self):
+        self.title = trans_ru(str('Траты всех пользователей'))
         super().__init__()
 
 
-class OverallChart(Chart):
-    """Build a series of average spending per day for all registered users"""
 
+    def build_series(self, data):
+        l = [data, self.get_lfit(data)]
+        return f'a:{self.piper(l)}'
 
-def charts_builder(update, context):
-    chat_id = update.effective_message.chat_id
+    def get_line_style(self):
+        first_line = [3, 6, 3]
+        second_line = [5]
+        lines = [first_line, second_line]
+        return self.piper(lines)
 
-    formatted_payments = ','.join(map(str, payments))
+    def get_legend(self):
+        legend_names = ['Траты в день', 'Тренд']
+        legend_names = [trans_ru(i) for i in legend_names]
+        return self.ltoc(legend_names, sep='|')
 
-    template = f'{head}'
-    url = f"""cht=lc&chs=700x300&chd=a:12,3,4,5,6|1,3,5,2,3,5|1,2,4,5,3&chdl=Ivanova|Filka|Gulin&chls=3|3|3&chtt=Гулин"""
+    def get_line_color(self):
+        return f'{Color.Blue}22,{Color.Red}'
 
-    # update.message.reply_text("https://chart.googleapis.com/chart?cht=p3&chd=t:60,40&chs=800x300&chl=Yes|No")
+    def set_params(self):
+        axis_labels, data, = self.get_user_payments()
+        self.axis_labels = self.build_x_axis(axis_labels)
+        self.data = self.build_series(data)
+        self.legend = self.get_legend()
+        self.line_style = self.get_line_style()
+        self.line_color = self.get_line_color()
 
+    def get_user_payments(self):
+        """Builds a universal query based on filter param (ft) from payments.
+        Returns list of items (day, sum_per_day) for a specific user.
 
-# c = Chart('647209696')
-# cp(c.get_user_payments())
+        depth defines how many days back we will plot (30 by default).
+        """
+        depth = datetime.today() - timedelta(days=self.max_days)
+        ft = {'timestamp__date__gte': depth,}
+        payments = Payment.objects.filter(**ft).order_by(). \
+            annotate(day=TruncDay('timestamp')). \
+            values('day'). \
+            annotate(sumamount=Sum('amount')).values('sumamount', 'day')
+        days = [trans_ru(i['day'].strftime('%d-%b-%y')) for i in payments]
+        amounts = [round(i['sumamount'], 0) for i in payments]
+        return days, amounts
