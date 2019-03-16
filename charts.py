@@ -112,7 +112,7 @@ class IndividualChart(Chart):
               'creator': self.payer}
         payments = Payment.objects.filter(**ft).order_by(). \
             annotate(day=TruncDay('timestamp')). \
-            values('day'). \
+            values('day').order_by('day'). \
             annotate(sumamount=Sum('amount')).values('sumamount', 'day')
         days = [trans_ru(i['day'].strftime('%d-%b-%y')) for i in payments]
         amounts = [round(i['sumamount'], 0) for i in payments]
@@ -121,11 +121,10 @@ class IndividualChart(Chart):
 
 class OverallChart(Chart):
     """Build a series of average spending per day for all registered users"""
+
     def __init__(self):
         self.title = trans_ru(str('Траты всех пользователей'))
         super().__init__()
-
-
 
     def build_series(self, data):
         l = [data, self.get_lfit(data)]
@@ -160,7 +159,7 @@ class OverallChart(Chart):
         depth defines how many days back we will plot (30 by default).
         """
         depth = datetime.today() - timedelta(days=self.max_days)
-        ft = {'timestamp__date__gte': depth,}
+        ft = {'timestamp__date__gte': depth, }
         payments = Payment.objects.filter(**ft).order_by(). \
             annotate(day=TruncDay('timestamp')). \
             values('day'). \
