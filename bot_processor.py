@@ -24,7 +24,7 @@ from constants import CurrencyChatChoices, regex_pop_currencies, pop_currencies,
 django.setup()
 from budget.models import Payment, Payer, Currency, CurrencyQuote
 from budget.exceptions import NoSuchCurrency
-
+from read_lenin import get_lenin_answer
 import logging
 
 from emoji import emojize
@@ -51,7 +51,7 @@ REQUEST_KWARGS = {
 """Start the bot."""
 
 updater = Updater(TOKEN,
-                  request_kwargs=REQUEST_KWARGS,  # TODO SWITCH OF
+                  # request_kwargs=REQUEST_KWARGS,  # TODO SWITCH OF
                   use_context=True)
 dp = updater.dispatcher
 bot = updater.bot
@@ -61,7 +61,7 @@ thousand_part = 'тыщ.?|тысяч.?|т|000'
 payment_regex = r'(?P<amount>[0-9]+([,.][0-9]*)?) (?P<rest>.+)'
 # thousand_payment_regex = fr'^(?P<amount>[0-9]+([,.][0-9]*)?)\s?(?P<thousand>{thousand_part}) (?P<rest>.+)$'
 help_message = '''
-    RESERVE!!! Привет! Я - бот, который регистирует все наши траты. \n
+    Привет! Я - бот, который регистирует все наши траты. \n
     Если тебе надо ввести новую трату просто введи сумму а потом ее описание. \n
     Если хочется посмотреть отчет о тратах и среднюю сумму которую каждый из нас тратит в день набери 
     <code>/report</code>. По умолчанию отчет будет с первого числа этого месяца. \n
@@ -256,7 +256,11 @@ def register_payment(update, context):
                             rest=rest,
                             update_id=update_id)
     foreign_val = f'{raw_amount} {currency_name}; ' if currency_name != 'RUB' else ''
-    success = emojize(f':white_check_mark: ({foreign_val}{val} рублей)', use_aliases=True)
+    if user.telegram_id == '344416307':  # TODO just a joke - remove later
+        lenin_answer = get_lenin_answer()
+    else:
+        lenin_answer = ''
+    success = emojize(f':white_check_mark: ({foreign_val}{val} рублей) {lenin_answer}', use_aliases=True)
     update.message.reply_text(success, quote=False)
 
 
