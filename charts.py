@@ -7,9 +7,11 @@ from constants import Color
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 import numpy as np
+from urllib import request
 
 
 def trans_ru(text):
+    request.quote("Моцарт".encode('cp1251'))  # TODO!
     """Translit text to  latin to guarantee that it will correctly rendered"""
     return translit(text, 'ru', reversed=True)
 
@@ -56,7 +58,12 @@ class Chart:
         return f'{self.entry_point}?{urlencode(context)}'
 
     def set_params(self):
-        pass
+        axis_labels, data, = self.get_user_payments()
+        self.axis_labels = self.build_x_axis(axis_labels)
+        self.data = self.build_series(data)
+        self.legend = self.get_legend()
+        self.line_style = self.get_line_style()
+        self.line_color = self.get_line_color()
 
 
 class IndividualChart(Chart):
@@ -92,14 +99,6 @@ class IndividualChart(Chart):
 
     def get_line_color(self):
         return f'{Color.Blue}22,{Color.Red}'
-
-    def set_params(self):
-        axis_labels, data, = self.get_user_payments()
-        self.axis_labels = self.build_x_axis(axis_labels)
-        self.data = self.build_series(data)
-        self.legend = self.get_legend()
-        self.line_style = self.get_line_style()
-        self.line_color = self.get_line_color()
 
     def get_user_payments(self):
         """Builds a universal query based on filter param (ft) from payments.
