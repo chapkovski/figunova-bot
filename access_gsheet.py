@@ -38,6 +38,8 @@ def gsheet_register_payment(date, user_id, update_id, user_name, val, rest, ):
 
 def delete_gsheet_record(update_id):
     try:
+        client = gspread.authorize(creds)
+        sheet = client.open("budget").sheet1
         cell = sheet.find(update_id)
         row_number = cell.row
         sheet.delete_row(row_number)
