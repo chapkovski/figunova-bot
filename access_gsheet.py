@@ -22,10 +22,10 @@ def json_serial(obj):
     raise TypeError("Type %s not serializable" % type(obj))
 
 
-def gsheet_register_payment(date, user_id, update_id, user_name, val, rest, ):
+def gsheet_register_payment(date, user_id, update_id, user_name, val, description, ):
     date = dumps(date, default=json_serial)
     #    # Extract and print all of the values
-    row = [date, user_id, user_name, val, rest, update_id]
+    row = [date, user_id, user_name, val, description, update_id]
     index = 2
     try:
         client = gspread.authorize(creds)

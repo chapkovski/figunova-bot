@@ -22,5 +22,9 @@ class Color:
     White = "FFFFFF"
 
 
+class StornoChatChoices(Enum):
+    entering_amount = 1
+
+
 pop_currencies = ['RUB', 'USD', 'EUR', 'UAH']
 regex_pop_currencies = '|'.join(pop_currencies)
