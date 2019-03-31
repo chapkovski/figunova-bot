@@ -1,10 +1,11 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from gspread.models import CellNotFound
 from datetime import date, datetime
-from utils import cp
 from json import dumps
 from gspread.exceptions import CellNotFound, APIError
+from commands import logging
+
+logger = logging.getLogger('gsheet_registration_module')
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive.file",
           "https://www.googleapis.com/auth/drive"]
@@ -24,7 +25,6 @@ def json_serial(obj):
 
 def gsheet_register_payment(date, user_id, update_id, user_name, val, description, ):
     date = dumps(date, default=json_serial)
-    #    # Extract and print all of the values
     row = [date, user_id, user_name, val, description, update_id]
     index = 2
     try:
@@ -32,7 +32,7 @@ def gsheet_register_payment(date, user_id, update_id, user_name, val, descriptio
         sheet = client.open("budget").sheet1
         sheet.insert_row(row, index)
     except (CellNotFound, APIError):
-        cp('SOMETHING IS WRONG WITH PAYMENT REGISTRATION!!!!')
+        logger.warning('SOMETHING IS WRONG WITH PAYMENT REGISTRATION!!!!')
         return False
 
 
@@ -45,9 +45,6 @@ def delete_gsheet_record(update_id):
         sheet.delete_row(row_number)
         return True
     except (CellNotFound, APIError):
-        cp('SOMETHING IS WRONG!!!!')
+        logger.warning('SOMETHING IS WRONG!!!!')
         return False
 
-
-if __name__ == '__main__':
-    delete_gsheet_record('jpa')

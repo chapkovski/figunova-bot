@@ -1,9 +1,8 @@
 from transliterate import translit
 from budget.models import Payment, Payer
-from utils import cp
 from django.db.models.functions import TruncDay
 from django.db.models import Sum
-from constants import Color
+from commands.constants import Color
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 import numpy as np

@@ -1,0 +1,1 @@
+from .read_lenin import get_lenin_answer

@@ -2,7 +2,7 @@ from termcolor import colored
 import shutil
 from functools import wraps
 from telegram import ChatAction
-
+from budget.models import Payer
 
 def cp(*x, color='red', center=True):
     columns = shutil.get_terminal_size().columns
@@ -21,3 +21,13 @@ def send_typing_action(func):
         return func(update, context, *args, **kwargs)
 
     return command_func
+
+
+
+def get_user(from_user):
+    user_id = from_user.id
+    fname = from_user.first_name
+    lname = from_user.last_name
+    user_info = {'first_name': fname, 'last_name': lname}
+    user, _ = Payer.objects.get_or_create(telegram_id=user_id, defaults=user_info)
+    return user
