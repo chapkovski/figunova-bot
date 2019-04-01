@@ -16,7 +16,7 @@ def report(update, context):
 
     if context.args:
         try:
-            date = parser.parse(context.args[0])
+            date = parser.parse(context.args[0],  dayfirst=True)
         except ValueError:
             update.message.reply_text(f'Не могу распознать дату, попробуйте еще раз...')
             return
