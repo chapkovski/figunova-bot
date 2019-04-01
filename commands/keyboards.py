@@ -1,4 +1,5 @@
-from telegram import (InlineKeyboardButton, InlineKeyboardMarkup)
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup)
+from .constants import pop_currencies
 
 
 def delete_keyboard(items):
@@ -31,3 +32,10 @@ def storno_keyboard():
     rows = [InlineKeyboardButton('Да, очень, я вся горю!', callback_data='proceed_to_storno')]
     cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
     return InlineKeyboardMarkup([rows, cancel_row])
+
+
+def currency_keyboard():
+    reply_keyboard = [pop_currencies,
+                      ['Другая валюта'],
+                      ['Отмена']]
+    return ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)

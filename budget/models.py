@@ -1,7 +1,7 @@
 import pytz
 import datetime
 from lenin.quote_requester import get_new_quote
-from .exceptions import NoConnection, NoSuchCurrency
+from exceptions import NoConnection, NoSuchCurrency
 # Create your models here.
 
 from django.db import models

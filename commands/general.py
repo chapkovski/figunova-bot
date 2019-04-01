@@ -1,26 +1,8 @@
-def cancel_or_done(update, context):
-    user_data = context.user_data
-    user_data.clear()
-    update.message.reply_text("\U0001F44D", reply_markup=ReplyKeyboardRemove())
-    return ConversationHandler.END
+from telegram.ext import ConversationHandler, CommandHandler, CallbackQueryHandler
+from telegram import ReplyKeyboardRemove
+import logging
 
-
-def help_processor(update, context):
-    """Send a message when the command /help is issued."""
-    update.message.reply_html(help_message)
-
-
-def error(update, context):
-    """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, context.error)
-
-
-def cancel(update, context):
-    user_data = context.user_data
-    ReplyKeyboardRemove()
-    return ConversationHandler.END
-
-
+"""Here we store some general handlers to cancel or get help, start etc'."""
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -39,6 +21,42 @@ help_message = '''
 
 
 def start(update, context):
+    logger.info('start request is received')
     """Send a message when the command /start is issued."""
 
     update.message.reply_html(help_message)
+
+
+def help_processor(update, context):
+    logger.info('help request is received')
+    """Send a message when the command /help is issued."""
+    update.message.reply_html(help_message)
+
+
+def error(update, context):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
+
+
+def cancel_or_done(update, context):
+    user_data = context.user_data
+    user_data.clear()
+    update.message.reply_text("\U0001F44D", reply_markup=ReplyKeyboardRemove())
+    return ConversationHandler.END
+
+
+def cancel(update, context):
+    ReplyKeyboardRemove()
+    return ConversationHandler.END
+
+
+def default(update, context):
+    update.callback_query.answer(text='')
+    update.callback_query.message.edit_text(
+        'чет не понял...',
+        reply_markup=None,
+    )
+    return ConversationHandler.END
+
+start_handler = CommandHandler("start", start)
+help_handler = CommandHandler("help", help_processor)

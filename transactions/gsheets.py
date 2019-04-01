@@ -5,11 +5,11 @@ from json import dumps
 from gspread.exceptions import CellNotFound, APIError
 from commands import logging
 
-logger = logging.getLogger('gsheet_registration_module')
+logger = logging.getLogger(__name__)
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive.file",
           "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', SCOPES)
+creds = ServiceAccountCredentials.from_json_keyfile_name('transactions/client_secret.json', SCOPES)
 
 client = gspread.authorize(creds)
 sheet = client.open("budget").sheet1
@@ -20,7 +20,7 @@ def json_serial(obj):
 
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
-    raise TypeError("Type %s not serializable" % type(obj))
+    raise TypeError(f"Type {type(obj)} not serializable")
 
 
 def gsheet_register_payment(date, user_id, update_id, user_name, val, description, ):
@@ -32,7 +32,7 @@ def gsheet_register_payment(date, user_id, update_id, user_name, val, descriptio
         sheet = client.open("budget").sheet1
         sheet.insert_row(row, index)
     except (CellNotFound, APIError):
-        logger.warning('SOMETHING IS WRONG WITH PAYMENT REGISTRATION!!!!')
+        logger.error('Failed to register payment in google sheets')
         return False
 
 
@@ -45,6 +45,6 @@ def delete_gsheet_record(update_id):
         sheet.delete_row(row_number)
         return True
     except (CellNotFound, APIError):
-        logger.warning('SOMETHING IS WRONG!!!!')
+        logger.error('Failed to delete record in google sheets')
         return False
 

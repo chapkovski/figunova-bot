@@ -1,3 +1,11 @@
+from budget.models import Payment, Payer
+from .keyboards import delete_keyboard
+from transactions.gsheets import delete_gsheet_record
+import logging
+from telegram.ext import ConversationHandler, CommandHandler, CallbackQueryHandler
+from .general import default
+logger = logging.getLogger(__name__)
+
 """
 When somebody sends the request \delete we get him 5 last messages and inline keyboard to choose
 which one to delete.
@@ -7,19 +15,7 @@ Previous message (with list of 5 last items) is deleted(??)
 
 """
 
-
-def receive_delete_msg(update, context):
-    if update.callback_query.data == 'cancel':
-        logger.info('Deletion is cancelled.')
-    else:
-        try:
-            update_id = update.callback_query.data
-            Payment.objects.filter(update=update_id).delete()
-            delete_gsheet_record(update_id)
-        except Payment.DoesNotExist:
-            update.message.reply_html('что-то пошло не так. Спросите у фильки')
-    update.callback_query.answer(show_alert=False, text="Пыщь!")
-    update.callback_query.message.delete()
+GET_DELETE_REQUEST, GET_CANCEL_DELETE_REQUEST = range(2)
 
 
 def delete(update, context):
@@ -45,3 +41,37 @@ def delete(update, context):
         update.message.reply_text(f'Чет не могу найти последних трат. Спроси у фильки что за хуйня')
     if update.callback_query:
         update.callback_query.answer()
+    return GET_DELETE_REQUEST
+
+
+def receive_delete_msg(update, context):
+    if update.callback_query.data == 'cancel':
+        logger.info('Deletion is cancelled.')
+    else:
+        try:
+            update_id = update.callback_query.data
+            Payment.objects.filter(update=update_id).delete()
+            delete_gsheet_record(update_id)
+        except Payment.DoesNotExist:
+            logger.warning(f'Item for update id {update_id} has not been found, deletion failed.')
+            update.message.reply_html('что-то пошло не так. Спросите у фильки')
+        finally:
+            update.callback_query.answer(show_alert=False, text="Пыщь!")
+            update.callback_query.message.delete()
+    return ConversationHandler.END
+
+
+def processing_timeout(update, context):
+    msg = 'Ты чет долго думаешь пацанчик, я все отменяю....'
+    update.message.reply_text(msg)
+    return ConversationHandler.END
+
+
+delete_chat_handler = ConversationHandler(
+    entry_points=[CommandHandler("delete", delete)],
+    states={
+        GET_DELETE_REQUEST: [CallbackQueryHandler(receive_delete_msg, pass_user_data=True)],
+
+    },
+    fallbacks=[ CallbackQueryHandler(default)],
+)

@@ -5,7 +5,7 @@ from commands import logging
 
 logger = logging.getLogger('transaction_module')
 from emoji import emojize
-from .register_gsheet import gsheet_register_payment
+from .gsheets import gsheet_register_payment
 
 
 def register_transaction(date, amount, description, user, update_id):
@@ -30,7 +30,7 @@ def register_transaction(date, amount, description, user, update_id):
         lenin_answer = get_lenin_answer()
     else:
         lenin_answer = ''
-    logger.info(f'{user.telegram_id} payment for {foreign_val} or {val} @ {date}.')
+    logger.info(f'User with id {user.telegram_id} made payment for {foreign_val} {val} roubles @ {date}.')
     success = emojize(f':white_check_mark: ({foreign_val}{val} рублей) {lenin_answer}', use_aliases=True)
     return success
 

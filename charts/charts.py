@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 import numpy as np
 from urllib import request
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def trans_ru(text):
@@ -77,12 +80,23 @@ class IndividualChart(Chart):
     def get_lfit(self, data):
         x = range(len(data))
         y = data
-        a, b = np.polyfit(x, y, deg=1)
-        predicted = [a * i + b for i in x]
+        logger.info(f'{str(list(x))}, {y}, DATA!')
+        if len(x) != len(y) or len(x) < 2:
+            logger.warning(f'too few observations for building a trend for {self.payer}, lfit failed')
+            return
+        try:
+            a, b = np.polyfit(x, y, deg=1)
+            predicted = [a * i + b for i in x]
+        except np.linalg.LinAlgError as err:
+            logger.error(f'{err} happened')
+            return
         return predicted
 
     def build_series(self, data):
-        l = [data, self.get_lfit(data)]
+        lfit_data = self.get_lfit(data)
+        l = [data, ]
+        if lfit_data:
+            l.append((lfit_data))
         return f'a:{self.piper(l)}'
 
     def get_line_style(self):

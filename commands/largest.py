@@ -1,5 +1,15 @@
+from datetime import datetime
+from dateutil import parser
+import pytz
+from budget.models import Payer, Payment
+from telegram.ext import CommandHandler
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def largest(update, context):
+    todayDate = datetime.now()
     try:
         how_many = int(context.args[0])
     except (IndexError, ValueError):
@@ -8,7 +18,7 @@ def largest(update, context):
         raw_date = context.args[1]
 
     except IndexError:
-        todayDate = datetime.datetime.now()
+
         raw_date = str(todayDate.replace(day=1))
     try:
         date = parser.parse(raw_date)
@@ -21,7 +31,8 @@ def largest(update, context):
     except Payer.DoesNotExist:
         update.message.reply_text(f'Не могу найти никаких записей о тебе, чувак...')
         return
-    date = date.replace(tzinfo=pytz.UTC)
+    date = date.replace(tzinfo=pytz.UTC, hour=0, minute=0)
+    logger.info(f'User with id {user.telegram_id} asked for {how_many} largest payments starting since {date}.')
     payments = Payment.objects.filter(creator=user, timestamp__gte=date).order_by('-amount')[:how_many]
     if payments.exists():
         message = f"""
@@ -32,3 +43,5 @@ def largest(update, context):
     else:
         update.message.reply_text(f'Никаких трат в этом периоде, везуха!')
 
+
+largest_handler = CommandHandler("largest", largest, pass_args=True)

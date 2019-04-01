@@ -1,6 +1,6 @@
 import random
 
-with open('clean_lenin.csv', 'r') as content_file:
+with open('lenin/clean_lenin.csv', 'r') as content_file:
     data = content_file.readlines()
 
 
