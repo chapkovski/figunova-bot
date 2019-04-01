@@ -32,7 +32,7 @@ key_correspondence = {'chart_type': 'cht',
 
 class Chart:
     entry_point = 'https://image-charts.com/chart'
-    chart_type = 'bhg'
+    chart_type = None
     size = '700x700'
     max_days = 30
 
@@ -77,6 +77,7 @@ class Chart:
 
 
 class IndividualChartWithTrend(Chart):
+    chart_type = 'lc'
     """Build a chart with  average spending per day for individual user."""
 
     def __init__(self, payer_id):
@@ -140,6 +141,7 @@ class IndividualChartWithTrend(Chart):
 
 
 class IndividualChartPerDay(Chart):
+    chart_type = 'bhg'
     """Build a BARchart with  average spending per day for individual user for the last 30 days."""
 
     def __init__(self, payer_id):
