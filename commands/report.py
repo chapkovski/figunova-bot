@@ -10,6 +10,7 @@ from commands.utils import get_user
 
 logger = logging.getLogger(__name__)
 
+
 def report(update, context):
     user = get_user(update.message.from_user)
 
@@ -37,8 +38,10 @@ def report(update, context):
         for p in payments:
             message += f"""<i>{p['screen_name']}</i>: Всего: <b>{round(p['total_sum'],
                                                                        0)}</b>. В среднем за день: {round(p['avg_sum'],
-                                                                                                          0)}\n"""
-        update.message.reply_html(text=message)
+                                                                                                          2)}\n"""
+
+
+        update.message.reply_markdown(text=message)
     else:
         update.message.reply_text(f'Нет трат за этот период!')
     logger.info(f'Successfully delivered report to user with id {user.telegram_id} with info starting at {date}')

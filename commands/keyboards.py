@@ -8,8 +8,8 @@ def delete_keyboard(items):
         return None
     delete_buttons_row = []
     for i, j in enumerate(items):
-        delete_buttons_row.append(InlineKeyboardButton(f'{i + 1}', callback_data=j.update))
-    cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
+        delete_buttons_row.append(InlineKeyboardButton(f'{i + 1}', callback_data=f'delete_update_{j.update}'))
+    cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel_delete')]
     return InlineKeyboardMarkup([delete_buttons_row, cancel_row])
 
 
@@ -30,7 +30,7 @@ def storno_keyboard():
     """ Keyboard to confirm storno action."""
 
     rows = [InlineKeyboardButton('Да, очень, я вся горю!', callback_data='proceed_to_storno')]
-    cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
+    cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel_storno')]
     return InlineKeyboardMarkup([rows, cancel_row])
 
 

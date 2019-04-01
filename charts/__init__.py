@@ -1,1 +1,1 @@
-from .charts import IndividualChart
+from .charts import IndividualChartWithTrend, IndividualChartPerDay

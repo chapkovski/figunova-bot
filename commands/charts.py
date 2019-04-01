@@ -1,6 +1,6 @@
 from budget.models import Payer
 from .keyboards import users_keyboard
-from charts import IndividualChart
+from charts import IndividualChartWithTrend
 from .general import default
 from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler
 import logging
@@ -22,7 +22,7 @@ def chart_start(update, context):
 
 def individual_chart(update, context):
     telegram_id = context.match.groupdict()['telegram_id']
-    chart = IndividualChart(telegram_id)
+    chart = IndividualChartWithTrend(telegram_id)
     update.callback_query.message.reply_photo(chart.get_url(), quote=False)
     update.callback_query.message.delete()
     return ConversationHandler.END

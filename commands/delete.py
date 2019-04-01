@@ -2,8 +2,10 @@ from budget.models import Payment, Payer
 from .keyboards import delete_keyboard
 from transactions.gsheets import delete_gsheet_record
 import logging
-from telegram.ext import ConversationHandler, CommandHandler, CallbackQueryHandler
+from telegram.ext import ConversationHandler, CommandHandler, CallbackQueryHandler, Filters, MessageHandler
+
 from .general import default
+
 logger = logging.getLogger(__name__)
 
 """
@@ -45,33 +47,47 @@ def delete(update, context):
 
 
 def receive_delete_msg(update, context):
-    if update.callback_query.data == 'cancel':
-        logger.info('Deletion is cancelled.')
-    else:
-        try:
-            update_id = update.callback_query.data
-            Payment.objects.filter(update=update_id).delete()
-            delete_gsheet_record(update_id)
-        except Payment.DoesNotExist:
-            logger.warning(f'Item for update id {update_id} has not been found, deletion failed.')
-            update.message.reply_html('что-то пошло не так. Спросите у фильки')
-        finally:
-            update.callback_query.answer(show_alert=False, text="Пыщь!")
-            update.callback_query.message.delete()
+    update_id = context.match.groupdict()['update_id']
+    try:
+        Payment.objects.filter(update=update_id).delete()
+        delete_gsheet_record(update_id)
+    except Payment.DoesNotExist:
+        logger.warning(f'Item for update id {update_id} has not been found, deletion failed.')
+        update.message.reply_html('что-то пошло не так. Спросите у фильки')
+    finally:
+        update.callback_query.answer(show_alert=True, text="Пыщь!")
+        update.callback_query.message.delete()
     return ConversationHandler.END
 
 
-def processing_timeout(update, context):
-    msg = 'Ты чет долго думаешь пацанчик, я все отменяю....'
-    update.message.reply_text(msg)
+def cancel_delete(update, context):
+    logger.info('Delete operation is cancelled')
+    update.callback_query.message.delete()
+    update.callback_query.answer(text='')
+    user_data = context.user_data
+    user_data.clear()
     return ConversationHandler.END
 
+def unclear_data(update, context):
+    logger.info('Cannot understand the query provided by deletion handler')
+
+    update.message.reply_text(text='Не могу понять что ты имеешь ввиду и на всякий случай осуществлю абортивную '
+                                   'модернизацию')
+    user_data = context.user_data
+    user_data.clear()
+    return ConversationHandler.END
 
 delete_chat_handler = ConversationHandler(
     entry_points=[CommandHandler("delete", delete)],
     states={
-        GET_DELETE_REQUEST: [CallbackQueryHandler(receive_delete_msg, pass_user_data=True)],
+        GET_DELETE_REQUEST: [CallbackQueryHandler(receive_delete_msg,
+                                                  pattern=r'^delete_update_(?P<update_id>\d+)$$',
+                                                  pass_user_data=True)],
 
     },
-    fallbacks=[ CallbackQueryHandler(default)],
+    fallbacks=[CallbackQueryHandler(cancel_delete,
+                                    pattern=r'^cancel_delete$',
+                                    pass_user_data=True),
+               MessageHandler(Filters.text, unclear_data, pass_user_data=True)
+               ],
 )

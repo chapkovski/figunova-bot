@@ -32,8 +32,8 @@ key_correspondence = {'chart_type': 'cht',
 
 class Chart:
     entry_point = 'https://image-charts.com/chart'
-    chart_type = 'lc'
-    size = '700x300'
+    chart_type = 'bhg'
+    size = '700x700'
     max_days = 30
 
     def __init__(self):
@@ -58,6 +58,14 @@ class Chart:
                 context[v] = getattr(self, k)
         """convert object's attributes to dict and convert them via urlunparse"""
         return f'{self.entry_point}?{urlencode(context)}'
+    def get_line_style(self):
+        pass
+    def get_line_color(self):
+        pass
+    def get_legend(self):
+        pass
+    def build_series(self, data):
+        pass
 
     def set_params(self):
         axis_labels, data, = self.get_user_payments()
@@ -68,7 +76,7 @@ class Chart:
         self.line_color = self.get_line_color()
 
 
-class IndividualChart(Chart):
+class IndividualChartWithTrend(Chart):
     """Build a chart with  average spending per day for individual user."""
 
     def __init__(self, payer_id):
@@ -131,6 +139,50 @@ class IndividualChart(Chart):
         return days, amounts
 
 
+class IndividualChartPerDay(Chart):
+    """Build a BARchart with  average spending per day for individual user for the last 30 days."""
+
+    def __init__(self, payer_id):
+        self.payer_id = payer_id
+        self.payer = Payer.objects.get(telegram_id=payer_id)
+        self.title = trans_ru(str(self.payer))
+        super().__init__()
+
+
+
+    def build_series(self, data):
+        l = [data, ]
+        return f'a:{self.piper(l)}'
+
+
+
+    def get_legend(self):
+        legend_names = ['Траты в день', ]
+        legend_names = [trans_ru(i) for i in legend_names]
+        return self.ltoc(legend_names, sep='|')
+
+
+
+    def get_user_payments(self):
+        """Builds a universal query based on filter param (ft) from payments.
+        Returns list of items (day, sum_per_day) for a specific user.
+
+        depth defines how many days back we will plot (30 by default).
+        """
+        depth = datetime.today() - timedelta(days=self.max_days)
+        ft = {'timestamp__date__gte': depth,
+              'creator': self.payer}
+        payments = Payment.objects.filter(**ft).order_by(). \
+            annotate(day=TruncDay('timestamp')). \
+            values('day').order_by('day'). \
+            annotate(sumamount=Sum('amount')).values('sumamount', 'day')
+        days = [trans_ru(i['day'].strftime('%d-%b-%y')) for i in payments]
+        amounts = [round(i['sumamount'], 0) for i in payments]
+        print(amounts)
+        return days, amounts
+
+
+
 class OverallChart(Chart):
     """Build a series of average spending per day for all registered users"""
 
@@ -179,3 +231,4 @@ class OverallChart(Chart):
         days = [trans_ru(i['day'].strftime('%d-%b-%y')) for i in payments]
         amounts = [round(i['sumamount'], 0) for i in payments]
         return days, amounts
+

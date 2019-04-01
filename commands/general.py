@@ -51,11 +51,11 @@ def cancel(update, context):
 
 
 def default(update, context):
+    logger.info('Operation is cancelled')
+    update.callback_query.message.delete()
     update.callback_query.answer(text='')
-    update.callback_query.message.edit_text(
-        'чет не понял...',
-        reply_markup=None,
-    )
+    user_data = context.user_data
+    user_data.clear()
     return ConversationHandler.END
 
 start_handler = CommandHandler("start", start)
