@@ -41,7 +41,7 @@ def report(update, context):
                                                                                                           2)}\n"""
 
 
-        update.message.reply_markdown(text=message)
+        update.message.reply_html(text=message)
     else:
         update.message.reply_text(f'Нет трат за этот период!')
     logger.info(f'Successfully delivered report to user with id {user.telegram_id} with info starting at {date}')
