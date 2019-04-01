@@ -1,6 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'budget_telebot.settings')
@@ -25,8 +26,8 @@ logger = logging.getLogger(__name__)
 # Initializing django to access models.
 
 
-# TOKEN = environ.get('TELEGRAM_API')
-TOKEN = '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
+TOKEN = os.environ.get('TELEGRAM_API')
+# TOKEN = '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
 
 logger.info('Starting the bot...')
 
