@@ -29,9 +29,10 @@ def cancel_due_to_inactivity(context):
 def register_payment(update, context):
     logger.info('get a new payment info')
     transaction_params = get_transaction_params(update, context)
-
+    creator = transaction_params['creator']
+    reply_kb = cat_keyboard() if creator.show_cats else ''
     success = register_transaction(**transaction_params)
-    r = update.message.reply_text(success, quote=False, reply_markup=cat_keyboard())
+    r = update.message.reply_text(success, quote=False, reply_markup=reply_kb)
     j = context.job_queue
     j.run_once(cancel_due_to_inactivity, 5, context=r)
     transaction_params.pop('date')

@@ -44,6 +44,7 @@ class Payer(models.Model):
     first_name = models.CharField(max_length=100000, null=True, blank=True)
     last_name = models.CharField(max_length=100000, null=True, blank=True)
     telegram_id = models.CharField(max_length=100000, unique=True, primary_key=True)
+    show_cats = models.NullBooleanField(verbose_name='Show categories when the payment is registered')
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
