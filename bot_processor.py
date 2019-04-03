@@ -12,7 +12,7 @@ from commands.charts import chart_chat_handler
 from commands.general import start_handler, help_handler,error
 from commands.delete import delete_chat_handler
 from commands.largest import largest_handler
-from commands.register_payment import payment_handler
+from commands.register_payment import payment_chat_handler
 from commands.report import report_handler
 from commands.currency import currency_chat_handler
 from commands.storno import storno_chat_handler
@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 # Initializing django to access models.
 
 
-TOKEN = os.environ.get('TELEGRAM_API')
-# TOKEN = '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
+# TOKEN = os.environ.get('TELEGRAM_API')
+TOKEN = '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
 
 logger.info('Starting the bot...')
 
@@ -45,7 +45,7 @@ def main():
         report_handler,
         currency_chat_handler,
         storno_chat_handler,
-        payment_handler
+        payment_chat_handler
     ]
     for handler in handlers:
         dp.add_handler(handler)

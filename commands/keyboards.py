@@ -1,5 +1,7 @@
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup)
 from .constants import pop_currencies
+from budget.models import Category
+from emoji import emojize
 
 
 def delete_keyboard(items):
@@ -24,6 +26,18 @@ def users_keyboard(users):
 
     cancel_row = [InlineKeyboardButton('Отмена', callback_data='cancel')]
     return InlineKeyboardMarkup([rows, cancel_row])
+
+
+def cat_keyboard():
+    """ Return keyboard with user names to show a graph for specific user."""
+    cats = Category.objects.all()
+    rows = []
+    for i in cats:
+        rows.append(InlineKeyboardButton(f'{i.emoji}',
+                                         callback_data=f'cat_id_{i.pk}'))
+
+
+    return InlineKeyboardMarkup([rows,])
 
 
 def storno_keyboard():
