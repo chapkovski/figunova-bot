@@ -1,7 +1,7 @@
 from .keyboards import settings_keyboard
 from .general import cancel_or_done
 from .utils import get_user
-from telegram.ext import ConversationHandler, CommandHandler, CallbackQueryHandler
+from telegram.ext import (ConversationHandler, CommandHandler, CallbackQueryHandler, MessageHandler, Filters)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,15 @@ def set_categories(update, context):
     return ConversationHandler.END
 
 
+def unclear_data(update, context):
+    update.message.reply_text(text='Не могу понять что ты имеешь ввиду и на всякий случай осуществлю абортивную '
+                                   'модернизацию')
+
+    user_data = context.user_data
+    user_data.clear()
+    return ConversationHandler.END
+
+
 settings_chat_handler = ConversationHandler(
     entry_points=[CommandHandler('settings', settings_start)],
     states={
@@ -39,5 +48,5 @@ settings_chat_handler = ConversationHandler(
                                                   pattern=r'^show_cat_option_(?P<cat_answer>\d+)$',
                                                   pass_user_data=True), ],
     },
-    fallbacks=[],
+    fallbacks=[MessageHandler(Filters.text, unclear_data, pass_user_data=True)],
 )
