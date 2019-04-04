@@ -26,7 +26,9 @@ def set_categories(update, context):
     user.show_cats = new_val
     user.save()
     update.callback_query.message.edit_reply_markup()
-
+    cat_corr = {False: "не", True: ""}
+    update.callback_query.message.reply_text(
+        f'Ну оки, {cat_corr[new_val]} буду показывать категории после ввода новой траты')
     return ConversationHandler.END
 
 
