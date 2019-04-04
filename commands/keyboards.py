@@ -36,8 +36,20 @@ def cat_keyboard():
         rows.append(InlineKeyboardButton(f'{i.emoji}',
                                          callback_data=f'cat_id_{i.pk}'))
 
+    return InlineKeyboardMarkup([rows, ])
 
-    return InlineKeyboardMarkup([rows,])
+
+def settings_keyboard(user):
+    """ Return keyboard with user names to show a graph for specific user."""
+
+    options = [(True, "Да"), (False, 'Нет'), ]
+    rows = []
+    for i, j in options:
+        current_choice = emojize(f':white_check_mark:', use_aliases=True) if user.show_cats == i else ''
+        rows.append(InlineKeyboardButton(f'{current_choice} {j}',
+                                         callback_data=f'show_cat_option_{int(i)}'))
+
+    return InlineKeyboardMarkup([rows, ])
 
 
 def storno_keyboard():

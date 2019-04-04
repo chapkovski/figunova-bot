@@ -1,6 +1,5 @@
 from budget.models import Payment, Payer
 from .keyboards import delete_keyboard
-from transactions.gsheets import delete_gsheet_record
 import logging
 from telegram.ext import ConversationHandler, CommandHandler, CallbackQueryHandler, Filters, MessageHandler
 
@@ -50,7 +49,6 @@ def receive_delete_msg(update, context):
     update_id = context.match.groupdict()['update_id']
     try:
         Payment.objects.filter(update=update_id).delete()
-        delete_gsheet_record(update_id)
     except Payment.DoesNotExist:
         logger.warning(f'Item for update id {update_id} has not been found, deletion failed.')
         update.message.reply_html('что-то пошло не так. Спросите у фильки')

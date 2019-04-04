@@ -16,6 +16,7 @@ from commands.register_payment import payment_chat_handler
 from commands.report import report_handler
 from commands.currency import currency_chat_handler
 from commands.storno import storno_chat_handler
+from commands.settings import settings_chat_handler
 """
 Bot that registers the payments and does some reporting on them. It also can manage (delete, correct) the exsisting
 payment records, and check if a user meets their financial goals.
@@ -45,6 +46,7 @@ def main():
         report_handler,
         currency_chat_handler,
         storno_chat_handler,
+        settings_chat_handler,
         payment_chat_handler
     ]
     for handler in handlers:

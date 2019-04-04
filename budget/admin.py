@@ -25,6 +25,7 @@ class PaymentAdmin(admin.ModelAdmin):
         'update',
         'timestamp'
     )
+    list_editable = ['category']
 
 
 admin.site.register(Payer, PayerAdmin)

@@ -74,8 +74,8 @@ WSGI_APPLICATION = 'budget_telebot.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-                default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
-            )
+        default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
+    )
 }
 
 # Password validation
@@ -113,4 +113,37 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+import logging.config
+
+LOGGING_CONFIG = None
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+
+    },
+    'loggers': {
+        'budget': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        }
+    }
+})
 django_heroku.settings(locals())

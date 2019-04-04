@@ -33,7 +33,8 @@ class Payment(TimeStampModel):
     amount = models.FloatField()
     description = models.CharField(max_length=100000)
     creator = models.ForeignKey(to='Payer', related_name='payments', on_delete=models.CASCADE)
-    category = models.ForeignKey(to='Category', related_name='payments', on_delete=models.CASCADE, null=True)
+    category = models.ForeignKey(to='Category', related_name='payments', on_delete=models.CASCADE, null=True,
+                                 blank=True)
     update = models.CharField(max_length=1000, unique=True)
 
     def __str__(self):

@@ -9,6 +9,7 @@ from .keyboards import cat_keyboard
 import logging
 from budget.models import Payment, Category
 from telegram.error import BadRequest
+from emoji import emojize
 
 logger = logging.getLogger(__name__)
 CATEGORY_TO_ADD = 1
@@ -53,8 +54,10 @@ def register_category(update, context):
     transaction.category = cat
     transaction.save()
     logger.info('Successfully register new category for current transaction')
-    update.callback_query.message.reply_text(
-        f'Пометил себе трату "{transaction.amount} на {transaction.description}" как {cat.description}', quote=False)
+    msg = f'Пометил себе трату "{transaction.amount} на {transaction.description}" как {cat.description}'
+    msg = emojize(':white_check_mark:' + msg, use_aliases=True)
+
+    update.callback_query.message.reply_text(msg, quote=False)
     update.callback_query.message.delete()
 
     return ConversationHandler.END
