@@ -76,7 +76,8 @@ def update_record(i):
         for col_number, value in enumerate(row):
             sheet.update_cell(row_number, col_number + 1, value)
         return True
-    except (CellNotFound, APIError):
+    except (CellNotFound, APIError) as e:
+        logger.error(e)
         logger.error(f'Failed to locate record {i.update} in google sheets')
         return False
     except Exception as e:
