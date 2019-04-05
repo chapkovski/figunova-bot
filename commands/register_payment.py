@@ -10,6 +10,7 @@ import logging
 from budget.models import Payment, Category
 from telegram.error import BadRequest
 from emoji import emojize
+from lenin import get_lenin_answer
 
 logger = logging.getLogger(__name__)
 CATEGORY_TO_ADD = 1
@@ -28,19 +29,27 @@ def cancel_due_to_inactivity(context):
 
 @send_typing_action
 def register_payment(update, context):
-    logger.info('get a new payment info')
     transaction_params = get_transaction_params(update, context)
     creator = transaction_params['creator']
+    logger.info(f'get a new payment info from {creator.telegram_id}')
     reply_kb = cat_keyboard() if creator.show_cats else ''
     success = register_transaction(**transaction_params)
-    r = update.message.reply_text(success, quote=False, reply_markup=reply_kb)
+    if creator.telegram_id == '344416307':  # TODO just a joke - remove later
+        lenin_answer = get_lenin_answer()
+    else:
+        lenin_answer = ''
+    context.user_data['lenin'] = lenin_answer
+
+    msg = success + '\n' + lenin_answer if creator.show_cats else success
+
+    r = update.message.reply_text(msg, quote=False, reply_markup=reply_kb)
     if creator.show_cats:
         j = context.job_queue
         j.run_once(cancel_due_to_inactivity, 5, context=r)
         transaction_params.pop('date')
         payment = Payment.objects.get(**transaction_params)
         context.user_data['transaction'] = payment
-        logger.info('Successfully register a new payment, proceed to categories...')
+        logger.info(f'Successfully register a new payment {payment.update}, proceed to categories...')
         return CATEGORY_TO_ADD
     else:
         return ConversationHandler.END
@@ -57,7 +66,8 @@ def register_category(update, context):
     transaction.category = cat
     transaction.save()
     logger.info('Successfully register new category for current transaction')
-    msg = f'Пометил себе трату "{transaction.amount} на {transaction.description}" как {cat.description}'
+    msg = f'Пометил себе трату "{transaction.amount} на {transaction.description}" как {cat.description}' + '\n' + \
+          context.user_data['lenin']
     msg = emojize(':white_check_mark:' + msg, use_aliases=True)
 
     update.callback_query.message.reply_text(msg, quote=False)
