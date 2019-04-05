@@ -26,7 +26,7 @@ class PaymentAdmin(admin.ModelAdmin):
         'timestamp'
     )
     list_editable = ['category']
-
+    list_filter = ('creator', 'category')
 
 admin.site.register(Payer, PayerAdmin)
 admin.site.register(Payment, PaymentAdmin)
