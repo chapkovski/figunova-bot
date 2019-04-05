@@ -18,7 +18,7 @@ def update_gsheet_record(sender, instance, created, update_fields, **kwargs):
     else:
         logger.info(f'Payment {instance.update} info has been updated')
         r = random.randint(0, 20)
-        huey_update_record.schedule(instance, delay=r).get()
+        huey_update_record.schedule((instance,), delay=r).get()
 
 
 @receiver(post_delete, sender=Payment)
