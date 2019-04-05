@@ -5,6 +5,7 @@ import logging
 from transactions.gsheets import register_payment, delete_record, update_record
 # from .config import huey  # import the "huey" object.
 from .tasks import huey_update_record  # import any tasks / decorated functions
+import random
 
 logger = logging.getLogger('budget.signals')
 
@@ -16,7 +17,8 @@ def update_gsheet_record(sender, instance, created, update_fields, **kwargs):
         register_payment(instance)
     else:
         logger.info(f'Payment {instance.update} info has been updated')
-        huey_update_record(instance).get()
+        r = random.randint(0, 20)
+        huey_update_record.schedule(instance, delay=r).get()
 
 
 @receiver(post_delete, sender=Payment)
