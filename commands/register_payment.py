@@ -40,7 +40,7 @@ def register_payment(update, context):
         lenin_answer = ''
     context.user_data['lenin'] = lenin_answer
 
-    msg = success + '\n' + lenin_answer if creator.show_cats else success
+    msg = success + ' ' + lenin_answer if creator.show_cats else success
 
     r = update.message.reply_text(msg, quote=False, reply_markup=reply_kb)
     if creator.show_cats:
@@ -66,7 +66,7 @@ def register_category(update, context):
     transaction.category = cat
     transaction.save()
     logger.info('Successfully register new category for current transaction')
-    msg = f'Пометил себе трату "{transaction.amount} на {transaction.description}" как {cat.description}' + '\n' + \
+    msg = f'Пометил себе трату "{transaction.amount} на {transaction.description}" как {cat.description}' + ' ' + \
           context.user_data['lenin']
     msg = emojize(':white_check_mark:' + msg, use_aliases=True)
 
