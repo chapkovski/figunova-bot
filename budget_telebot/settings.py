@@ -130,9 +130,14 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 LOGGING_CONFIG = None
-from huey import RedisHuey
-
-HUEY = RedisHuey('budget')
+HUEY = {
+    'name': 'budget',
+    'url': os.environ.get('REDIS_URL', 'redis://localhost:6379/'),
+    'connection': {
+        'url': os.environ.get('REDIS_URL', 'redis://localhost:6379/'),
+    },
+    'immediate': False,
+}
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': False,
