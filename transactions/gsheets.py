@@ -14,7 +14,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapi
 creds = ServiceAccountCredentials.from_json_keyfile_name('transactions/client_secret.json', SCOPES)
 
 client = gspread.authorize(creds)
-
+sheet = client.open("budget").sheet1
 
 field_col_correspondence = {
     "timestamp": 1, "user_id": 2, "user_name": 3, "amount": 4, "description": 5, "update_id": 6, "category": 7,
@@ -61,7 +61,6 @@ def delete_record(i):
 
 
 def update_record(i):
-    sheet = client.open("budget").sheet1
     timestamp = dumps(i.timestamp, default=json_serial)
     user_name = f'{i.creator.first_name} {i.creator.last_name}'
     if i.category:
@@ -70,8 +69,6 @@ def update_record(i):
         category = ''
     row = [timestamp, i.creator.telegram_id, user_name, i.amount, i.description, i.update, category]
     try:
-        # client = gspread.authorize(creds)
-        sheet = client.open("budget").sheet1
         cell = sheet.find(i.update)
         row_number = cell.row
         for col_number, value in enumerate(row):
@@ -79,4 +76,7 @@ def update_record(i):
         return True
     except (CellNotFound, APIError):
         logger.error(f'Failed to locate record {i.update} in google sheets')
+        return False
+    except Exception as e:
+        logger.error(e)
         return False
