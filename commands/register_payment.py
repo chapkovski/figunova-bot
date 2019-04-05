@@ -34,13 +34,16 @@ def register_payment(update, context):
     reply_kb = cat_keyboard() if creator.show_cats else ''
     success = register_transaction(**transaction_params)
     r = update.message.reply_text(success, quote=False, reply_markup=reply_kb)
-    j = context.job_queue
-    j.run_once(cancel_due_to_inactivity, 5, context=r)
-    transaction_params.pop('date')
-    payment = Payment.objects.get(**transaction_params)
-    context.user_data['transaction'] = payment
-    logger.info('Successfully register a new payment, proceed to categories...')
-    return CATEGORY_TO_ADD
+    if creator.show_cats:
+        j = context.job_queue
+        j.run_once(cancel_due_to_inactivity, 5, context=r)
+        transaction_params.pop('date')
+        payment = Payment.objects.get(**transaction_params)
+        context.user_data['transaction'] = payment
+        logger.info('Successfully register a new payment, proceed to categories...')
+        return CATEGORY_TO_ADD
+    else:
+        return ConversationHandler.END
 
 
 def register_category(update, context):
