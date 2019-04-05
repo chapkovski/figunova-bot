@@ -74,6 +74,8 @@ class Payer(models.Model):
 class Currency(TimeStampModel):
     class Meta:
         verbose_name_plural = "Currencies"
+        ordering = ['-timestamp']
+        get_latest_by = 'timestamp'
 
     payer = models.ForeignKey(to='Payer', related_name='currencies', on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=100)
