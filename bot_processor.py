@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 # Initializing django to access models.
 
 
-# TOKEN = os.environ.get('TELEGRAM_API')
-TOKEN = '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
+TOKEN = os.environ.get('TELEGRAM_API')
+# TOKEN = '617288510:AAHS0ghER8QZPt7WN-fu-bNDe6WN4sIDj_Y'  # TODO: Temporarily - switching to reserve bot for testing
 
 logger.info('Starting the bot...')
 
