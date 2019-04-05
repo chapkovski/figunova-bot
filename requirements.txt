@@ -11,4 +11,5 @@ jsonfield==2.0.2
 transliterate==1.10.2
 numpy==1.16.2
 huey>=2.0.1
+redis>=3.2.1
 
