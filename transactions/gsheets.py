@@ -63,6 +63,8 @@ def delete_record(i):
 def update_record(i):
     timestamp = dumps(i.timestamp, default=json_serial)
     user_name = f'{i.creator.first_name} {i.creator.last_name}'
+    client = gspread.authorize(creds)
+    sheet = client.open("budget").sheet1
     if i.category:
         category = i.category.name
     else:

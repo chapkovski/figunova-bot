@@ -1,7 +1,7 @@
 from django.contrib import admin
 from emoji import emojize
 
-print('IM IN ADMIN!')
+
 # Register your models here.
 from .models import Payer, Payment, CurrencyQuote, Category, Currency
 
