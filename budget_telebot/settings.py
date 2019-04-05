@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import dj_database_url
 import os
 import django_heroku
+import logging
+import logging.config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -36,8 +38,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'budget'
+    'budget',
+    'huey.contrib.djhuey',
 ]
+
+# HUEY = {
+#     'name': 'huey-to-gsheets',
+#     'consumer': {
+#         'blocking': True,  # Use blocking list pop instead of polling Redis.
+#         'loglevel': logging.DEBUG,
+#         'workers': 4,
+#         'scheduler_interval': 1,
+#         'simple_log': True,
+#     },
+# }
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -113,10 +128,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
-import logging.config
 
 LOGGING_CONFIG = None
+from huey import RedisHuey
 
+HUEY = RedisHuey('budget')
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': False,
@@ -146,4 +162,5 @@ logging.config.dictConfig({
         }
     }
 })
+
 django_heroku.settings(locals())

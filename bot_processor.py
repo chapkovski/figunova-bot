@@ -1,11 +1,11 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'budget_telebot.settings')
 django.setup()
+
 from telegram.ext import Updater
 from commands import logging
 from commands.charts import chart_chat_handler

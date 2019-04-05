@@ -3,6 +3,8 @@ from django.dispatch import receiver
 from .models import Payment
 import logging
 from transactions.gsheets import register_payment, delete_record, update_record
+# from .config import huey  # import the "huey" object.
+from .tasks import huey_update_record  # import any tasks / decorated functions
 
 logger = logging.getLogger('budget.signals')
 
@@ -14,7 +16,7 @@ def update_gsheet_record(sender, instance, created, update_fields, **kwargs):
         register_payment(instance)
     else:
         logger.info(f'Payment {instance.update} info has been updated')
-        update_record(instance)
+        huey_update_record(instance).get()
 
 
 @receiver(post_delete, sender=Payment)
