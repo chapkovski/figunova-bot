@@ -5,7 +5,20 @@ from commands import logging
 
 logger = logging.getLogger('transaction_module')
 from emoji import emojize
+from math import floor
 
+
+def rub_ending(val):
+    """return correct ending for russian roubles for specific amount."""
+    special2s = [11, 12, 13, 14]
+    last1 = int(val % 10)
+    last2 = int(val % 100)
+    if last2 not in special2s:
+        if last1 in [2, 3, 4]:
+            return 'рубля'
+        if last1 == 1:
+            return 'рубль'
+    return 'рублей'
 
 
 def register_transaction(date, amount, description, creator, update):
@@ -26,7 +39,7 @@ def register_transaction(date, amount, description, creator, update):
     else:
         lenin_answer = ''
     logger.info(f'User with id {creator.telegram_id} made payment for {foreign_val} {val} roubles @ {date}.')
-    success = emojize(f':white_check_mark: ({foreign_val}{val} рублей) {lenin_answer}', use_aliases=True)
+    success = emojize(f':white_check_mark: ({foreign_val}{val} {rub_ending(val)}) {lenin_answer}', use_aliases=True)
     return success
 
 
