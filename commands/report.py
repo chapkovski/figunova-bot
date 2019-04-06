@@ -7,44 +7,38 @@ from django.db.models.functions import Concat
 from telegram.ext import CommandHandler
 import logging
 from commands.utils import get_user
+from telegram.ext import MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
+from .keyboards import month_report_keyboard
 
 logger = logging.getLogger(__name__)
 
-
-def report(update, context):
-    user = get_user(update.message.from_user)
-
-    if context.args:
-        try:
-            date = parser.parse(context.args[0],  dayfirst=True)
-        except ValueError:
-            update.message.reply_text(f'Не могу распознать дату, попробуйте еще раз...')
-            return
-    else:
-        todayDate = datetime.now()
-        date = todayDate.replace(day=1, hour=0, minute=0)
-    date = date.replace(tzinfo=pytz.UTC)
-    payments = Payment.objects.order_by().filter(timestamp__gte=date)
-    logger.info(f'User with id {user.telegram_id} asked for a report starting at {date}')
-    if payments.exists():
-        minmaxpayments = payments.aggregate(Min('timestamp'), Max('timestamp'))
-        numdays = (minmaxpayments['timestamp__max'] - minmaxpayments['timestamp__min']).days + 1
-        payments = payments.annotate(
-            screen_name=Concat('creator__first_name', V(' '), 'creator__last_name',
-                               output_field=CharField()), ). \
-            values('screen_name').annotate(total_sum=Sum('amount'), avg_sum=(Sum('amount') / numdays))
-
-        message = f"""<b>Траты начиная с {date.strftime('%d-%m-%y')}:</b>\n"""
-        for p in payments:
-            message += f"""<i>{p['screen_name']}</i>: Всего: <b>{round(p['total_sum'],
-                                                                       0)}</b>. В среднем за день: {round(p['avg_sum'],
-                                                                                                          2)}\n"""
+MONTH_SELECT = 1
 
 
-        update.message.reply_html(text=message)
-    else:
-        update.message.reply_text(f'Нет трат за этот период!')
-    logger.info(f'Successfully delivered report to user with id {user.telegram_id} with info starting at {date}')
+def start_report(update, context):
+
+    update.message.reply_text(f'Выберите месяц', reply_markup=month_report_keyboard())
+    return MONTH_SELECT
 
 
-report_handler = CommandHandler("report", report, pass_args=True)
+def report_request(update, context):
+    month = context.match.groupdict().get('month')
+    year = context.match.groupdict().get('year')
+    report = Payment.objects.report(month, year)
+    return ConversationHandler.END
+
+
+report_handler = CommandHandler("report", start_report, pass_args=True)
+
+report_chat_handler = ConversationHandler(
+    entry_points=[report_handler],
+    states={
+        MONTH_SELECT: [CallbackQueryHandler(report_request,
+                                            pattern=r'^month_(?P<month>\d{2})_(?P<year>\d{4})$',
+                                            pass_user_data=True)],
+    },
+    fallbacks=[
+        # MessageHandler(Filters.text, unclear_data, pass_user_data=True)
+    ],
+
+)

@@ -1,7 +1,8 @@
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup)
 from .constants import pop_currencies
-from budget.models import Category
+from budget.models import Category, Payment
 from emoji import emojize
+import locale
 
 
 def delete_keyboard(items):
@@ -65,3 +66,17 @@ def currency_keyboard():
                       ['Другая валюта'],
                       ['Отмена']]
     return ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+
+
+def month_report_keyboard():
+    """ Return keyboard with user names to show a graph for specific user."""
+
+    months = Payment.objects.all().dates('timestamp', 'month')
+    rows = []
+    locale.setlocale(locale.LC_ALL, 'ru_RU')
+    for i in months:
+        full_month = i.strftime("month_%m_%Y")
+        rows.append([InlineKeyboardButton(f'{i.strftime("%b %Y")}',
+                                          callback_data=full_month)])
+
+    return InlineKeyboardMarkup(rows, )

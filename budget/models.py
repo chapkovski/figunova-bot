@@ -6,6 +6,7 @@ from exceptions import NoConnection, NoSuchCurrency
 
 from django.db import models
 from jsonfield import JSONField
+from django.utils.timezone import now
 
 
 class TimeStampModel(models.Model):
@@ -14,7 +15,7 @@ class TimeStampModel(models.Model):
         ordering = ['-timestamp']
         get_latest_by = 'timestamp'
 
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(default=now, editable=True)
 
 
 class Category(models.Model):
@@ -29,7 +30,13 @@ class Category(models.Model):
         return f'{self.name} ({self.description})'
 
 
+class PaymentManager(models.Manager):
+    def report(self, month, year):
+        return super().get_queryset().filter(timestamp__month=month, timestamp__year=year)
+
+
 class Payment(TimeStampModel):
+    objects = PaymentManager()
     amount = models.FloatField()
     description = models.CharField(max_length=100000)
     creator = models.ForeignKey(to='Payer', related_name='payments', on_delete=models.CASCADE)

@@ -13,7 +13,7 @@ from commands.general import start_handler, help_handler, error
 from commands.delete import delete_chat_handler
 from commands.largest import largest_handler
 from commands.register_payment import payment_chat_handler
-from commands.report import report_handler
+from commands.report import report_chat_handler
 from commands.currency import currency_chat_handler
 from commands.storno import storno_chat_handler
 from commands.settings import settings_chat_handler
@@ -44,7 +44,7 @@ def main():
         delete_chat_handler,
         help_handler,
         largest_handler,
-        report_handler,
+        report_chat_handler,
         currency_chat_handler,
         storno_chat_handler,
         settings_chat_handler,
